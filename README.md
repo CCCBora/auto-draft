@@ -7,7 +7,11 @@
 * 真实的引用：所有引用的文献可以查找到真实的原文。
 * LaTeX模板直接编译。
 
-# Usage 
+# Requirements
+
+需要能使用GPT-4的API Key. 生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 总共过程需要大约十分钟. 
+
+# 使用方法 
 1. 克隆此仓库：
 ```angular2html
 git clone https://github.com/CCCBora/auto-draft
