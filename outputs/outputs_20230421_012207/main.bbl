@@ -1,0 +1,72 @@
+\begin{thebibliography}{10}
+
+\bibitem{2303.08631}
+D.~Barber.
+\newblock Smoothed q-learning.
+\newblock {\em arXiv preprint arXiv:2303.08631}, 2023.
+
+\bibitem{1811.09013}
+M.~W. Ehsan~Imani, Eric~Graves.
+\newblock An off-policy policy gradient theorem using emphatic weightings.
+\newblock {\em arXiv preprint arXiv:1811.09013}, 2018.
+
+\bibitem{2202.05135}
+X.-J.~Z. Kaiyue~Wu.
+\newblock Group-agent reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2202.05135}, 2022.
+
+\bibitem{2001.09608}
+C.~Li.
+\newblock Some insights into lifelong reinforcement learning systems.
+\newblock {\em arXiv preprint arXiv:2001.09608}, 2020.
+
+\bibitem{2106.14642}
+M.~G. P.~E. Li~Meng, Anis~Yazidi.
+\newblock Expert q-learning: Deep reinforcement learning with coarse state
+  values from offline expert examples.
+\newblock {\em arXiv preprint arXiv:2106.14642}, 2021.
+
+\bibitem{2108.11510}
+K.~Y. K. L. M.~S. Ngan~Le, Vidhiwar Singh~Rathour.
+\newblock Deep reinforcement learning in computer vision: A comprehensive
+  survey.
+\newblock {\em arXiv preprint arXiv:2108.11510}, 2021.
+
+\bibitem{2212.00253}
+S.~S. J. Y. M. Z. K. H. B. L. L.~W. Qiyue~Yin, Tongtong~Yu.
+\newblock Distributed deep reinforcement learning: A survey and a multi-player
+  multi-agent learning toolbox.
+\newblock {\em arXiv preprint arXiv:2212.00253}, 2022.
+
+\bibitem{2012.01100}
+M.~R. Rong~Zhu.
+\newblock Self-correcting q-learning.
+\newblock {\em arXiv preprint arXiv:2012.01100}, 2020.
+
+\bibitem{1911.09048}
+J.~Schmidt.
+\newblock Morphisms of networks of hybrid open systems.
+\newblock {\em arXiv preprint arXiv:1911.09048}, 2019.
+
+\bibitem{2209.01820}
+W.~J.~A. van Heeswijk.
+\newblock Natural policy gradients in reinforcement learning explained.
+\newblock {\em arXiv preprint arXiv:2209.01820}, 2022.
+
+\bibitem{2106.01134}
+J.~L. Wei~Liao, Xiaohui~Wei.
+\newblock Smooth q-learning: Accelerate convergence of q-learning using
+  similarity.
+\newblock {\em arXiv preprint arXiv:2106.01134}, 2021.
+
+\bibitem{1703.02102}
+V.~K. Yemi~Okesanjo.
+\newblock Revisiting stochastic off-policy action-value gradients.
+\newblock {\em arXiv preprint arXiv:1703.02102}, 2017.
+
+\bibitem{2009.07888}
+A.~K. J. J.~Z. Zhuangdi~Zhu, Kaixiang~Lin.
+\newblock Transfer learning in deep reinforcement learning: A survey.
+\newblock {\em arXiv preprint arXiv:2009.07888}, 2020.
+
+\end{thebibliography}

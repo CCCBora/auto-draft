@@ -42,11 +42,17 @@ def extract_section_name(assistant_message, default_section_name=""):
     return keywords
 
 
-def extract_json(assistant_message):
+def extract_json(assistant_message, default_output=None):
+    if default_output is None:
+        default_keys = ["Method 1", "Method 2"]
+    else:
+        default_keys = default_output
     try:
         dict = json.loads(assistant_message)
     except:
-        raise ValueError("Cannot read assistant message. ")
+        log.info("Responses are not in json format. Return the default keys.\n ")
+        log.info(f"assistant_message: {assistant_message}")
+        return default_keys
     return dict.keys()
 
 

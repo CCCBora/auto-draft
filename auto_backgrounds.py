@@ -1,8 +1,7 @@
 from utils.references import References
-from utils.prompts import generate_paper_prompts, generate_keywords_prompts, generate_experiments_prompts
+from utils.prompts import generate_bg_keywords_prompts, generate_bg_summary_prompts
 from utils.gpt_interaction import get_responses, extract_responses, extract_keywords, extract_json
 from utils.tex_processing import replace_title
-from utils.figures import generate_random_figures
 import datetime
 import shutil
 import time
@@ -42,7 +41,7 @@ def pipeline(paper, section, save_to_path, model):
     :return usage
     """
     print(f"Generating {section}...")
-    prompts = generate_paper_prompts(paper, section)
+    prompts = generate_bg_summary_prompts(paper, section)
     gpt_response, usage = get_responses(prompts, model)
     output = extract_responses(gpt_response)
     paper["body"][section] = output
@@ -65,14 +64,7 @@ def pipeline(paper, section, save_to_path, model):
 
 
 
-def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
-    """
-    The main pipeline of generating a paper.
-        1. Copy everything to the output folder.
-        2. Create references.
-        3. Generate each section using `pipeline`.
-        4. Post-processing: check common errors, fill the title, ...
-    """
+def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
     paper = {}
     paper_body = {}
 
@@ -85,12 +77,12 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
 
     bibtex_path = destination_folder + "/ref.bib"
     save_to_path = destination_folder +"/"
-    replace_title(save_to_path, title)
+    replace_title(save_to_path, "A Survey on " + title)
     logging.basicConfig( level=logging.INFO, filename=save_to_path+"generation.log")
 
     # Generate keywords and references
     print("Initialize the paper information ...")
-    prompts = generate_keywords_prompts(title, description)
+    prompts = generate_bg_keywords_prompts(title, description)
     gpt_response, usage = get_responses(prompts, model)
     keywords = extract_keywords(gpt_response)
     log_usage(usage, "keywords")
@@ -107,14 +99,7 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
 
-    print("Generating figures ...")
-    prompts = generate_experiments_prompts(paper)
-    gpt_response, usage = get_responses(prompts, model)
-    list_of_methods = list(extract_json(gpt_response))
-    log_usage(usage, "figures")
-    generate_random_figures(list_of_methods, save_to_path + "comparison.png")
-
-    for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
+    for section in ["introduction", "related works", "backgrounds"]:
         try:
             usage = pipeline(paper, section, save_to_path, model=model)
             log_usage(usage, section)
@@ -123,11 +108,10 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
     print(f"The paper {title} has been generated. Saved to {save_to_path}.")
 
 if __name__ == "__main__":
-    # title = "Training Adversarial Generative Neural Network with Adaptive Dropout Rate"
-    title = "Playing Atari Game with Deep Reinforcement Learning"
+    title = "Reinforcement Learning"
     description = ""
-    template = "ICLR2022"
+    template = "Summary"
     model = "gpt-4"
     # model = "gpt-3.5-turbo"
 
-    generate_draft(title, description, template, model)
+    generate_backgrounds(title, description, template, model)
