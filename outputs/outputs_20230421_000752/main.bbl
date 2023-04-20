@@ -1,0 +1,122 @@
+\begin{thebibliography}{18}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Arie~Leizarowitz(2007)]{0711.2185}
+Adam~Shwartz Arie~Leizarowitz.
+\newblock Exact finite approximations of average-cost countable markov decision
+  processes.
+\newblock \emph{arXiv preprint arXiv:0711.2185}, 2007.
+\newblock URL \url{http://arxiv.org/abs/0711.2185v1}.
+
+\bibitem[Barber(2023)]{2303.08631}
+David Barber.
+\newblock Smoothed q-learning.
+\newblock \emph{arXiv preprint arXiv:2303.08631}, 2023.
+\newblock URL \url{http://arxiv.org/abs/2303.08631v1}.
+
+\bibitem[Ehsan~Imani(2018)]{1811.09013}
+Martha~White Ehsan~Imani, Eric~Graves.
+\newblock An off-policy policy gradient theorem using emphatic weightings.
+\newblock \emph{arXiv preprint arXiv:1811.09013}, 2018.
+\newblock URL \url{http://arxiv.org/abs/1811.09013v2}.
+
+\bibitem[Ehud~Lehrer(2015)]{1511.02377}
+Omri N.~Solan Ehud~Lehrer, Eilon~Solan.
+\newblock The value functions of markov decision processes.
+\newblock \emph{arXiv preprint arXiv:1511.02377}, 2015.
+\newblock URL \url{http://arxiv.org/abs/1511.02377v1}.
+
+\bibitem[Kai~Arulkumaran(2017)]{1708.05866}
+Miles Brundage Anil Anthony~Bharath Kai~Arulkumaran, Marc Peter~Deisenroth.
+\newblock A brief survey of deep reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:1708.05866}, 2017.
+\newblock URL \url{http://arxiv.org/abs/1708.05866v2}.
+
+\bibitem[Krishnamurthy(2015)]{1512.07669}
+Vikram Krishnamurthy.
+\newblock Reinforcement learning: Stochastic approximation algorithms for
+  markov decision processes.
+\newblock \emph{arXiv preprint arXiv:1512.07669}, 2015.
+\newblock URL \url{http://arxiv.org/abs/1512.07669v1}.
+
+\bibitem[Kämmerer(2019)]{1911.04817}
+Mattis~Manfred Kämmerer.
+\newblock On policy gradients.
+\newblock \emph{arXiv preprint arXiv:1911.04817}, 2019.
+\newblock URL \url{http://arxiv.org/abs/1911.04817v1}.
+
+\bibitem[Li~Meng(2021)]{2106.14642}
+Morten Goodwin Paal~Engelstad Li~Meng, Anis~Yazidi.
+\newblock Expert q-learning: Deep reinforcement learning with coarse state
+  values from offline expert examples.
+\newblock \emph{arXiv preprint arXiv:2106.14642}, 2021.
+\newblock URL \url{http://arxiv.org/abs/2106.14642v3}.
+
+\bibitem[Mahipal~Jadeja(2017)]{1709.05067}
+Agam~Shah Mahipal~Jadeja, Neelanshi~Varia.
+\newblock Deep reinforcement learning for conversational ai.
+\newblock \emph{arXiv preprint arXiv:1709.05067}, 2017.
+\newblock URL \url{http://arxiv.org/abs/1709.05067v1}.
+
+\bibitem[Nathalie~Bertrand(2020)]{2008.10426}
+Thomas Brihaye Paulin~Fournier Nathalie~Bertrand, Patricia~Bouyer.
+\newblock Taming denumerable markov decision processes with decisiveness.
+\newblock \emph{arXiv preprint arXiv:2008.10426}, 2020.
+\newblock URL \url{http://arxiv.org/abs/2008.10426v1}.
+
+\bibitem[Ngan~Le(2021)]{2108.11510}
+Kashu Yamazaki Khoa Luu Marios~Savvides Ngan~Le, Vidhiwar Singh~Rathour.
+\newblock Deep reinforcement learning in computer vision: A comprehensive
+  survey.
+\newblock \emph{arXiv preprint arXiv:2108.11510}, 2021.
+\newblock URL \url{http://arxiv.org/abs/2108.11510v1}.
+
+\bibitem[Philip S.~Thomas(2015)]{1512.09075}
+Billy~Okal Philip S.~Thomas.
+\newblock A notation for markov decision processes.
+\newblock \emph{arXiv preprint arXiv:1512.09075}, 2015.
+\newblock URL \url{http://arxiv.org/abs/1512.09075v2}.
+
+\bibitem[Qiyue~Yin(2022)]{2212.00253}
+Shengqi Shen Jun Yang Meijing Zhao Kaiqi Huang Bin Liang Liang~Wang Qiyue~Yin,
+  Tongtong~Yu.
+\newblock Distributed deep reinforcement learning: A survey and a multi-player
+  multi-agent learning toolbox.
+\newblock \emph{arXiv preprint arXiv:2212.00253}, 2022.
+\newblock URL \url{http://arxiv.org/abs/2212.00253v1}.
+
+\bibitem[Rong~Zhu(2020)]{2012.01100}
+Mattia~Rigotti Rong~Zhu.
+\newblock Self-correcting q-learning.
+\newblock \emph{arXiv preprint arXiv:2012.01100}, 2020.
+\newblock URL \url{http://arxiv.org/abs/2012.01100v2}.
+
+\bibitem[Sergey~Ivanov(2019)]{1906.10025}
+Alexander~D'yakonov Sergey~Ivanov.
+\newblock Modern deep reinforcement learning algorithms.
+\newblock \emph{arXiv preprint arXiv:1906.10025}, 2019.
+\newblock URL \url{http://arxiv.org/abs/1906.10025v2}.
+
+\bibitem[van Heeswijk(2022)]{2209.01820}
+W.~J.~A. van Heeswijk.
+\newblock Natural policy gradients in reinforcement learning explained.
+\newblock \emph{arXiv preprint arXiv:2209.01820}, 2022.
+\newblock URL \url{http://arxiv.org/abs/2209.01820v1}.
+
+\bibitem[Xiu-Xiu~Zhan(2021)]{2111.01334}
+Zhipeng Wang Huijuang Wang Petter Holme Zi-Ke~Zhang Xiu-Xiu~Zhan, Chuang~Liu.
+\newblock Measuring and utilizing temporal network dissimilarity.
+\newblock \emph{arXiv preprint arXiv:2111.01334}, 2021.
+\newblock URL \url{http://arxiv.org/abs/2111.01334v1}.
+
+\bibitem[Yemi~Okesanjo(2017)]{1703.02102}
+Victor~Kofia Yemi~Okesanjo.
+\newblock Revisiting stochastic off-policy action-value gradients.
+\newblock \emph{arXiv preprint arXiv:1703.02102}, 2017.
+\newblock URL \url{http://arxiv.org/abs/1703.02102v2}.
+
+\end{thebibliography}

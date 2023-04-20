@@ -1,0 +1,20 @@
+\section{backgrounds}
+\subsection{Problem Statement and Foundational Concepts}
+
+Reinforcement Learning (RL) is a subfield of machine learning that focuses on training agents to make decisions in an environment to maximize a cumulative reward signal. In RL, an agent interacts with an environment through a sequence of actions, observations, and rewards, aiming to learn an optimal policy that maps states to actions \cite{1512.09075}. The problem can be formalized as a Markov Decision Process (MDP), which is defined by a tuple $(S, A, P, R, \gamma)$, where $S$ is the set of states, $A$ is the set of actions, $P$ is the state transition probability function, $R$ is the reward function, and $\gamma$ is the discount factor \cite{1511.02377}. The goal of RL is to find a policy $\pi(a|s)$ that maximizes the expected cumulative reward, defined as $G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}$, where $R_{t+k+1}$ is the reward received at time step $t+k+1$ \cite{1512.07669}.
+
+\subsection{Q-Learning and Related Algorithms}
+
+Q-learning is a popular model-free RL algorithm that estimates the action-value function $Q(s, a)$, which represents the expected cumulative reward of taking action $a$ in state $s$ and following the optimal policy thereafter \cite{2303.08631}. The Q-learning update rule is given by:
+
+\[Q(s, a) \leftarrow Q(s, a) + \alpha \left[ R(s, a) + \gamma \max_{a'} Q(s', a') - Q(s, a) \right],\]
+
+where $\alpha$ is the learning rate, $R(s, a)$ is the reward for taking action $a$ in state $s$, and $s'$ is the next state \cite{2303.08631}. However, Q-learning can suffer from overestimation bias, which can lead to suboptimal performance \cite{2106.14642}. To address this issue, Double Q-learning was proposed, which uses two separate Q-value estimators and updates them alternately, mitigating overestimation bias while maintaining convergence guarantees \cite{2303.08631}. Another variant, Expert Q-learning, incorporates semi-supervised learning by splitting Q-values into state values and action advantages, and using an expert network to assess the value of states \cite{2106.14642}.
+
+\subsection{Policy Gradient Methods}
+
+Policy gradient methods are another class of RL algorithms that optimize the policy directly by estimating the gradient of the expected cumulative reward with respect to the policy parameters \cite{1703.02102}. The policy gradient theorem provides a simplified form for the gradient, which can be used to derive on-policy and off-policy algorithms \cite{1811.09013}. Natural policy gradients, which incorporate second-order information to improve convergence, form the foundation for state-of-the-art algorithms like Trust Region Policy Optimization (TRPO) and Proximal Policy Optimization (PPO) \cite{2209.01820}.
+
+\subsection{Methodology and Evaluation Metrics}
+
+In this paper, we will explore various RL algorithms, focusing on Q-learning and its variants, as well as policy gradient methods. We will delve into their theoretical foundations, convergence properties, and practical limitations. To assess the performance of these algorithms, we will use evaluation metrics such as cumulative reward, convergence speed, and sample efficiency. By comparing the performance of different algorithms, we aim to provide insights into their strengths and weaknesses, and identify potential areas for improvement and future research directions.

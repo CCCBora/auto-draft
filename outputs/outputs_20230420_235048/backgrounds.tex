@@ -1,0 +1,26 @@
+\section{backgrounds}
+
+\subsection{Problem Statement}
+The primary goal of this research is to develop a deep reinforcement learning model capable of learning to play Atari games directly from raw pixel inputs. The model should be able to generalize across various games and achieve human-level performance.
+
+\subsection{Foundational Theories and Concepts}
+Reinforcement learning (RL) is a type of machine learning where an agent learns to make decisions by interacting with an environment. The agent receives feedback in the form of rewards and aims to maximize the cumulative reward over time. The problem can be modeled as a Markov Decision Process (MDP) defined as a tuple $(S, A, P, R, \gamma)$, where $S$ is the set of states, $A$ is the set of actions, $P$ is the state transition probability, $R$ is the reward function, and $\gamma$ is the discount factor.
+
+The primary concept in RL is the action-value function $Q^{\pi}(s, a)$, which represents the expected return when taking action $a$ in state $s$ and following policy $\pi$ thereafter. The optimal action-value function $Q^{*}(s, a)$ is the maximum action-value function over all policies. The Bellman optimality equation is given by:
+\[Q^{*}(s, a) = \mathbb{E}_{s' \sim P}[R(s, a) + \gamma \max_{a'} Q^{*}(s', a')]\]
+
+Deep Q-Networks (DQN) are a combination of Q-learning and deep neural networks, which are used to approximate the optimal action-value function. The loss function for DQN is given by:
+\[\mathcal{L}(\theta) = \mathbb{E}_{(s, a, r, s') \sim \mathcal{D}}[(r + \gamma \max_{a'} Q(s', a'; \theta^{-}) - Q(s, a; \theta))^2]\]
+where $\theta$ are the network parameters, $\theta^{-}$ are the target network parameters, and $\mathcal{D}$ is the replay buffer containing past experiences.
+
+\subsection{Methodology}
+In this paper, we propose a deep reinforcement learning model that learns to play Atari games using raw pixel inputs. The model consists of a deep convolutional neural network (CNN) combined with a Q-learning algorithm. The CNN is used to extract high-level features from the raw pixel inputs, and the Q-learning algorithm is used to estimate the action-value function. The model is trained using a variant of the DQN algorithm, which includes experience replay and target network updates.
+
+\subsection{Evaluation Metrics}
+To assess the performance of the proposed model, we will use the following evaluation metrics:
+\begin{itemize}
+    \item Average episode reward: The mean reward obtained by the agent per episode during evaluation.
+    \item Human-normalized score: The ratio of the agent's score to the average human player's score.
+    \item Training time: The time taken for the model to converge to a stable performance.
+\end{itemize}
+These metrics will be used to compare the performance of the proposed model with other state-of-the-art methods and human players.

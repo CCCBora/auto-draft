@@ -1,0 +1,74 @@
+\begin{thebibliography}{10}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Akshita~Mittel(2018)]{1809.00397}
+Himanshi~Yadav Akshita~Mittel, Sowmya~Munukutla.
+\newblock Visual transfer between atari games using competitive reinforcement
+  learning.
+\newblock \emph{arXiv preprint arXiv:1809.00397}, 2018.
+\newblock URL \url{http://arxiv.org/abs/1809.00397v1}.
+
+\bibitem[Kai~Arulkumaran(2017)]{1708.05866}
+Miles Brundage Anil Anthony~Bharath Kai~Arulkumaran, Marc Peter~Deisenroth.
+\newblock A brief survey of deep reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:1708.05866}, 2017.
+\newblock URL \url{http://arxiv.org/abs/1708.05866v2}.
+
+\bibitem[Kenny~Young(2019)]{1903.03176}
+Tian~Tian Kenny~Young.
+\newblock Minatar: An atari-inspired testbed for thorough and reproducible
+  reinforcement learning experiments.
+\newblock \emph{arXiv preprint arXiv:1903.03176}, 2019.
+\newblock URL \url{http://arxiv.org/abs/1903.03176v2}.
+
+\bibitem[Li~Meng(2021)]{2106.14642}
+Morten Goodwin Paal~Engelstad Li~Meng, Anis~Yazidi.
+\newblock Expert q-learning: Deep reinforcement learning with coarse state
+  values from offline expert examples.
+\newblock \emph{arXiv preprint arXiv:2106.14642}, 2021.
+\newblock URL \url{http://arxiv.org/abs/2106.14642v3}.
+
+\bibitem[Mahipal~Jadeja(2017)]{1709.05067}
+Agam~Shah Mahipal~Jadeja, Neelanshi~Varia.
+\newblock Deep reinforcement learning for conversational ai.
+\newblock \emph{arXiv preprint arXiv:1709.05067}, 2017.
+\newblock URL \url{http://arxiv.org/abs/1709.05067v1}.
+
+\bibitem[Ngan~Le(2021)]{2108.11510}
+Kashu Yamazaki Khoa Luu Marios~Savvides Ngan~Le, Vidhiwar Singh~Rathour.
+\newblock Deep reinforcement learning in computer vision: A comprehensive
+  survey.
+\newblock \emph{arXiv preprint arXiv:2108.11510}, 2021.
+\newblock URL \url{http://arxiv.org/abs/2108.11510v1}.
+
+\bibitem[Qiyue~Yin(2022)]{2212.00253}
+Shengqi Shen Jun Yang Meijing Zhao Kaiqi Huang Bin Liang Liang~Wang Qiyue~Yin,
+  Tongtong~Yu.
+\newblock Distributed deep reinforcement learning: A survey and a multi-player
+  multi-agent learning toolbox.
+\newblock \emph{arXiv preprint arXiv:2212.00253}, 2022.
+\newblock URL \url{http://arxiv.org/abs/2212.00253v1}.
+
+\bibitem[Russell~Kaplan(2017)]{1704.05539}
+Alexander~Sosa Russell~Kaplan, Christopher~Sauer.
+\newblock Beating atari with natural language guided reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:1704.05539}, 2017.
+\newblock URL \url{http://arxiv.org/abs/1704.05539v1}.
+
+\bibitem[Sergey~Ivanov(2019)]{1906.10025}
+Alexander~D'yakonov Sergey~Ivanov.
+\newblock Modern deep reinforcement learning algorithms.
+\newblock \emph{arXiv preprint arXiv:1906.10025}, 2019.
+\newblock URL \url{http://arxiv.org/abs/1906.10025v2}.
+
+\bibitem[Yang~Shao(2022)]{2203.16777}
+Tadayuki Matsumura Taiki Fuji Kiyoto Ito Hiroyuki~Mizuno Yang~Shao, Quan~Kong.
+\newblock Mask atari for deep reinforcement learning as pomdp benchmarks.
+\newblock \emph{arXiv preprint arXiv:2203.16777}, 2022.
+\newblock URL \url{http://arxiv.org/abs/2203.16777v1}.
+
+\end{thebibliography}

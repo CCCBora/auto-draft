@@ -1,0 +1,16 @@
+\section{backgrounds}
+Reinforcement Learning (RL) is a learning paradigm for solving sequential decision-making problems, where an agent learns to make decisions by interacting with an environment and receiving feedback in the form of rewards or penalties \cite{2001.09608}. The central problem in RL is to find an optimal policy, which is a mapping from states to actions, that maximizes the expected cumulative reward over time.
+
+One of the foundational theories in RL is the concept of Markov Decision Processes (MDPs), which provide a mathematical framework for modeling decision-making problems. An MDP is defined as a tuple $(S, A, P, R, \gamma)$, where $S$ is the set of states, $A$ is the set of actions, $P$ is the state transition probability function, $R$ is the reward function, and $\gamma$ is the discount factor \cite{2108.11510}. The objective in an MDP is to find a policy $\pi$ that maximizes the expected return $G_t = \sum_{k=0}^{\infty} \gamma^k R_{t+k+1}$, where $t$ is the current time step and $\gamma \in [0, 1]$ is the discount factor that determines the importance of future rewards.
+
+Q-learning is a popular model-free RL algorithm that estimates the action-value function $Q(s, a)$, which represents the expected return when taking action $a$ in state $s$ and following the optimal policy thereafter \cite{2303.08631}. The Q-learning update rule is given by:
+\begin{equation}
+Q(s, a) \leftarrow Q(s, a) + \alpha [R(s, a) + \gamma \max_{a'} Q(s', a') - Q(s, a)],
+\end{equation}
+where $\alpha$ is the learning rate, $s'$ is the next state, and $a'$ is an action in state $s'$ \cite{2106.01134}.
+
+Deep Reinforcement Learning (DRL) is an extension of RL that employs deep neural networks as function approximators for the value function or policy \cite{2108.11510}. DRL has demonstrated remarkable success in various domains, including finance, medicine, healthcare, video games, robotics, and computer vision \cite{2108.11510}. However, DRL is known to suffer from data inefficiency due to its trial-and-error learning mechanism, and several methods have been proposed to improve sample efficiency, such as environment modeling, experience transfer, and distributed modifications \cite{2202.05135}.
+
+Policy gradient methods are another class of RL algorithms that directly optimize the policy by following the gradient of the expected return with respect to the policy parameters \cite{1911.09048}. The policy gradient theorem provides a simplified form for the gradient, which has been widely used in on-policy learning algorithms \cite{1703.02102}. Off-policy learning, where the behavior policy is not necessarily attempting to learn and follow the optimal policy for the given task, has been a challenging area of research, and recent work has proposed the first off-policy policy gradient theorem using emphatic weightings \cite{1811.09013}.
+
+In summary, Reinforcement Learning aims to solve sequential decision-making problems by finding an optimal policy that maximizes the expected cumulative reward over time. Foundational theories and algorithms such as MDPs, Q-learning, DRL, and policy gradient methods provide the basis for RL research and applications in various domains \cite{2001.09608, 2108.11510}.

@@ -1,0 +1,33 @@
+\documentclass{article} % For LaTeX2e
+\UseRawInputEncoding
+\usepackage{graphicx}
+\usepackage{booktabs} 
+\input{math_commands.tex} 
+\usepackage{hyperref}
+\usepackage{url} 
+\usepackage{algorithmicx}
+
+\title{A Survey on Reinforcement Learning} 
+\author{GPT-4}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}} 
+ 
+\begin{document} 
+\maketitle
+\input{abstract.tex}
+\input{introduction.tex}
+\input{related works.tex}
+\input{backgrounds.tex}
+\input{methodology.tex}
+\input{experiments.tex}
+\input{conclusion.tex}
+
+\bibliography{ref}
+\bibliographystyle{abbrv}
+
+%\appendix
+%\section{Appendix}
+%You may include other additional sections here.
+
+\end{document}
