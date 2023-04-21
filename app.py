@@ -2,10 +2,8 @@ import gradio as gr
 import openai
 from auto_backgrounds import generate_backgrounds
 
-# todo: bugs. where is my zip file?
-#       3. create a huggingface space. test it using multiple devices!
-#       4. further polish auto_backgrounds.py. Make backgrounds have multiple subsection.
-#       5. Design a good layout of huggingface space.
+# todo: 3. create a huggingface space. test it using multiple devices!
+#       5. Add more functions in this demo.
 
 def clear_inputs(text1, text2):
     return ("", "")
@@ -14,7 +12,12 @@ with gr.Blocks() as demo:
     gr.Markdown('''
     # Auto-Draft: 论文结构辅助工具
     
-    用法: 输入任意论文标题, 点击Submit, 等待大概十分钟, 下载output.zip.  
+    本Demo提供对Auto-Draft的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，
+    即可自动生成对这个领域的Introduction，Related Works，和Backgrounds. 
+    
+    ## 用法
+    
+    输入一个领域的名称（比如Deep Reinforcement Learning), 点击Submit, 等待大概十分钟, 下载output.zip，在Overleaf上编译浏览.  
     ''')
     with gr.Row():
         with gr.Column():
