@@ -2,7 +2,7 @@ import gradio as gr
 import openai
 from auto_backgrounds import generate_backgrounds
 
-# todo:
+# todo: bugs. where is my zip file?
 #       3. create a huggingface space. test it using multiple devices!
 #       4. further polish auto_backgrounds.py. Make backgrounds have multiple subsection.
 #       5. Design a good layout of huggingface space.
@@ -18,14 +18,14 @@ with gr.Blocks() as demo:
     ''')
     with gr.Row():
         with gr.Column():
-            title = gr.Textbox(value="Playing Atari Game with Deep Reinforcement Learning", lines=1, max_lines=1, label="Title")
+            title = gr.Textbox(value="Deep Reinforcement Learning", lines=1, max_lines=1, label="Title")
             description = gr.Textbox(lines=5, label="Description (Optional)")
 
             with gr.Row():
                 clear_button = gr.Button("Clear")
                 submit_button = gr.Button("Submit")
         with gr.Column():
-            file_output = gr.outputs.File()
+            file_output = gr.File()
 
     clear_button.click(fn=clear_inputs, inputs=[title, description], outputs=[title, description])
     submit_button.click(fn=generate_backgrounds, inputs=[title, description], outputs=file_output)

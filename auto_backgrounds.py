@@ -118,7 +118,7 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
             print(f"Failed to generate {section} due to the error: {e}")
     print(f"The paper {title} has been generated. Saved to {save_to_path}.")
     # shutil.make_archive("output.zip", 'zip', save_to_path)
-    return make_archive(save_to_path, save_to_path+"output.zip")
+    return make_archive(save_to_path, "output.zip")
 
 if __name__ == "__main__":
     title = "Reinforcement Learning"
