@@ -133,9 +133,8 @@ class References:
             paper_ids.append(paper["paper_id"])
             # Save the generated BibTeX entries to a file
             with open(path_to_bibtex, "a", encoding="utf-8") as file:
-                for entry in bibtex_entries:
-                    file.write(entry)
-                    file.write("\n\n")
+                file.write(bibtex_entry)
+                file.write("\n\n")
         return paper_ids
 
     def to_prompts(self):
@@ -149,7 +148,13 @@ class References:
 
 if __name__ == "__main__":
     refs = References()
-    keywords_dict = {"machine learning 1": 10, "machine learning 2":10}
+    keywords_dict = {
+  "Deep Q-Networks": 5,
+  "Policy Gradient Methods": 4,
+  "Actor-Critic Algorithms": 4,
+  "Model-Based Reinforcement Learning": 3,
+  "Exploration-Exploitation Trade-off": 2
+}
     refs.collect_papers(keywords_dict)
     for p in refs.papers:
         print(p["paper_id"])
