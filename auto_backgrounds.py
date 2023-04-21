@@ -76,6 +76,9 @@ def pipeline(paper, section, save_to_path, model):
 
 
 def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
+
+    return make_archive("utils/", "output.zip")
+
     paper = {}
     paper_body = {}
 
