@@ -44,7 +44,7 @@ def _collect_papers_arxiv(keyword, counts=3):
             for author in authors:
                 name = author.find(f"{namespace}name").text
                 author_list.append(name)
-            authors_str = " , ".join(author_list)
+            authors_str = " and ".join(author_list)
 
             # Extract the year
             published = entry.find(f"{namespace}published").text
@@ -100,8 +100,6 @@ class References:
         for key, counts in keywords_dict.items():
             self.papers = self.papers + process(key, counts)
 
-        # TODO: remove repeated entries
-        # test this
         seen = set()
         papers = []
         for paper in self.papers:
@@ -148,3 +146,10 @@ class References:
         for paper in self.papers:
             prompts[paper["paper_id"]] = paper["abstract"]
         return prompts
+
+if __name__ == "__main__":
+    refs = References()
+    keywords_dict = {"machine learning 1": 10, "machine learning 2":10}
+    refs.collect_papers(keywords_dict)
+    for p in refs.papers:
+        print(p["paper_id"])

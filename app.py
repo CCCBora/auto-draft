@@ -2,13 +2,10 @@ import gradio as gr
 import openai
 from auto_backgrounds import generate_backgrounds
 
-# todo: 1. remove repeated entry in bibfile (go to references.py)
-#       2. (maybe) multiple commas error (see Overleaf)
+# todo:
 #       3. create a huggingface space. test it using multiple devices!
 #       4. further polish auto_backgrounds.py. Make backgrounds have multiple subsection.
 #       5. Design a good layout of huggingface space.
-def generate_backgrounds(t1, t2):
-    return "README.md"
 
 def clear_inputs(text1, text2):
     return ("", "")
