@@ -7,10 +7,21 @@ import datetime
 import shutil
 import time
 import logging
+import os
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
 TOTAL_COMPLETION_TOKENS = 0
+
+def make_archive(source, destination):
+    base = os.path.basename(destination)
+    name = base.split('.')[0]
+    format = base.split('.')[1]
+    archive_from = os.path.dirname(source)
+    archive_to = os.path.basename(source.strip(os.sep))
+    shutil.make_archive(name, format, archive_from, archive_to)
+    shutil.move('%s.%s'%(name,format), destination)
+    return destination
 
 
 def log_usage(usage, generating_target, print_out=True):
@@ -59,7 +70,7 @@ def pipeline(paper, section, save_to_path, model):
             f.write(f"\section{{{section}}}\n")
         with open(tex_file, "a") as f:
             f.write(output)
-    time.sleep(20)
+    time.sleep(5)
     print(f"{section} has been generated. Saved to {tex_file}.")
     return usage
 
@@ -121,6 +132,7 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
         except Exception as e:
             print(f"Failed to generate {section} due to the error: {e}")
     print(f"The paper {title} has been generated. Saved to {save_to_path}.")
+    return make_archive(save_to_path, save_to_path+"output.zip")
 
 if __name__ == "__main__":
     # title = "Training Adversarial Generative Neural Network with Adaptive Dropout Rate"

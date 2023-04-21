@@ -6,6 +6,7 @@ import datetime
 import shutil
 import time
 import logging
+import os
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
@@ -31,6 +32,16 @@ def log_usage(usage, generating_target, print_out=True):
         print(message)
     logging.info(message)
 
+def make_archive(source, destination):
+    base = os.path.basename(destination)
+    name = base.split('.')[0]
+    format = base.split('.')[1]
+    archive_from = os.path.dirname(source)
+    archive_to = os.path.basename(source.strip(os.sep))
+    shutil.make_archive(name, format, archive_from, archive_to)
+    shutil.move('%s.%s'%(name,format), destination)
+    return destination
+
 def pipeline(paper, section, save_to_path, model):
     """
     The main pipeline of generating a section.
@@ -55,10 +66,10 @@ def pipeline(paper, section, save_to_path, model):
             f.write(r"\end{abstract}")
     else:
         with open(tex_file, "w") as f:
-            f.write(f"\section{{{section}}}\n")
+            f.write(f"\section{{{section.upper()}}}\n")
         with open(tex_file, "a") as f:
             f.write(output)
-    time.sleep(20)
+    time.sleep(5)
     print(f"{section} has been generated. Saved to {tex_file}.")
     return usage
 
@@ -106,6 +117,8 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
         except Exception as e:
             print(f"Failed to generate {section} due to the error: {e}")
     print(f"The paper {title} has been generated. Saved to {save_to_path}.")
+    # shutil.make_archive("output.zip", 'zip', save_to_path)
+    return make_archive(save_to_path, save_to_path+"output.zip")
 
 if __name__ == "__main__":
     title = "Reinforcement Learning"

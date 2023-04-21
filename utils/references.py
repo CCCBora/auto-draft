@@ -49,7 +49,14 @@ def _collect_papers_arxiv(keyword, counts=3):
             # Extract the year
             published = entry.find(f"{namespace}published").text
             year = published.split("-")[0]
-            arxiv_id = re.search(r'\d+\.\d+', link).group(0)
+
+            founds = re.search(r'\d+\.\d+', link)
+            if founds is None:
+                # some links are not standard; such as "https://arxiv.org/abs/cs/0603127v1".
+                # will be solved in the future.
+                continue
+            else:
+                arxiv_id = founds.group(0)
             journal = f"arXiv preprint arXiv:{arxiv_id}"
             result = {
                 "paper_id": arxiv_id,
@@ -92,6 +99,17 @@ class References:
                 raise NotImplementedError("Other sources have not been not supported yet.")
         for key, counts in keywords_dict.items():
             self.papers = self.papers + process(key, counts)
+
+        # TODO: remove repeated entries
+        # test this
+        seen = set()
+        papers = []
+        for paper in self.papers:
+            paper_id = paper["paper_id"]
+            if paper_id not in seen:
+                seen.add(paper_id)
+                papers.append(paper)
+        self.papers = papers
 
     def to_bibtex(self, path_to_bibtex="ref.bib"):
         """
