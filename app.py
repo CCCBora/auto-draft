@@ -12,7 +12,7 @@ with gr.Blocks() as demo:
     gr.Markdown('''
     # Auto-Draft: 论文结构辅助工具
     
-    本Demo提供对Auto-Draft的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，
+    本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，
     即可自动生成对这个领域的Introduction，Related Works，和Backgrounds. 
     
     ## 用法
