@@ -1,13 +1,11 @@
 import openai
 import re
+import os
 import json
 import logging
 log = logging.getLogger(__name__)
 
-f = open("api_key.txt", "r")
-openai.api_key = f.read()
-f.close()
-
+openai.api_key = os.environ['OPENAI_API_KEY']
 
 def extract_responses(assistant_message):
     # pattern = re.compile(r"f\.write\(r'{1,3}(.*?)'{0,3}\){0,1}$", re.DOTALL)
