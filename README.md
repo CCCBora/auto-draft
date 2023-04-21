@@ -1,3 +1,13 @@
+---
+sdk: gradio
+app_file: app.py
+license: mit
+title: 'Auto-Draft: 论文结构辅助工具'
+colorTo: indigo
+python_version: 3.10.10
+---
+
+
 # Auto-Draft: 论文结构辅助工具
 
 这个项目旨在为学术论文写作创建一个全自动辅助工具：搜索相关文献，拟定论文结构，生成论文模板。希望这个工具在未来可以让人们摆脱繁琐的论文写作，将工作的重心放在纯粹的科研上。
