@@ -17,7 +17,8 @@ python_version: 3.10.10
 
 运行过程需要能使用GPT-4的API Key. 生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 总共过程需要大约十分钟. 
 
-# Demo地址 
+# 体验地址  
+以下链接提供简单功能的免费体验. 如果需要更定制化的功能, 请参照*使用方法*进行本地部署和自行修改.
 
 https://huggingface.co/spaces/auto-academic/auto-draft
 
