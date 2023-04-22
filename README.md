@@ -38,7 +38,7 @@ python auto_backgrounds.py
 ```
 
 # 示例
-`outputs` 文件夹中提供了部分输入的原始输出. 经由Overleaf直接编译得到. 
+`outputs` 文件夹中提供了部分输入的原始输出. 经由Overleaf直接编译得到. 也可以查看本目录下的sample-output.pdf.
 
 Page 1            |  Page 2
 :-------------------------:|:-------------------------:
