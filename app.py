@@ -7,12 +7,21 @@ from auto_backgrounds import generate_backgrounds
 def clear_inputs(text1, text2):
     return ("", "")
 
+def wrapped_generate_backgrounds(title, description):
+    if title == "Deep Reinforcement Learning":
+        return "output.zip"
+    else:
+        return generate_backgrounds(title, description)
+
+
 with gr.Blocks() as demo:
     gr.Markdown('''
     # Auto-Draft: 文献整理辅助工具
     
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，
     即可自动对这个领域的相关文献进行归纳总结. 
+    
+    *生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 请用户酌情体验.*
     
     ## 用法
     
@@ -30,7 +39,7 @@ with gr.Blocks() as demo:
             file_output = gr.File()
 
     clear_button.click(fn=clear_inputs, inputs=[title, description], outputs=[title, description])
-    submit_button.click(fn=generate_backgrounds, inputs=[title, description], outputs=file_output)
+    submit_button.click(fn=wrapped_generate_backgrounds, inputs=[title, description], outputs=file_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch()
