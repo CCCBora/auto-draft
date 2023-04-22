@@ -21,7 +21,7 @@ with gr.Blocks() as demo:
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，
     即可自动对这个领域的相关文献进行归纳总结. 
     
-    *生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 请用户酌情体验.*
+    生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 请用户酌情体验.
     
     ## 用法
     
