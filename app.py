@@ -16,12 +16,13 @@ def wrapped_generate_backgrounds(title, description):
 
 with gr.Blocks() as demo:
     gr.Markdown('''
-    # Auto-Draft: 文献整理辅助工具
+    # Auto-Draft: 文献整理辅助工具-限量免费使用
     
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，
     即可自动对这个领域的相关文献进行归纳总结. 
     
-    生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 请用户酌情体验.
+    生成一篇论文，需要使用我GPT4的API，大概每篇15000 Tokens(大约0.5到0.8美元). 
+    我为大家提供了30刀的额度上限，希望大家有明确需求再使用. 如果有更多需求，建议本地部署, 使用自己的API KEY!
     
     ## 用法
     
