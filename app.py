@@ -24,7 +24,7 @@ with gr.Blocks() as demo:
     生成一篇论文，需要使用我GPT4的API，大概每篇15000 Tokens(大约0.5到0.8美元). 
     我为大家提供了30刀的额度上限，希望大家有明确需求再使用. 如果有更多需求，建议本地部署, 使用自己的API KEY!
     
-    2023-04-26 Update: 我本月的余额用完了, 感谢乐乐老师帮忙宣传, 也感觉大家的体验和反馈! 我会按照大家的意见对功能进行改进. 下个月开始仅会在Huggingface
+    ***2023-04-26 Update***: 我本月的余额用完了, 感谢乐乐老师帮忙宣传, 也感觉大家的体验和反馈! 我会按照大家的意见对功能进行改进. 下个月开始仅会在Huggingface
     的Organization里提供免费的试用, 欢迎有兴趣的同学通过下面的链接加入!
     
     [https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM) 
