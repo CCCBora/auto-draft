@@ -5,6 +5,7 @@ import json
 import logging
 log = logging.getLogger(__name__)
 
+# todo: 将api_key通过函数传入; 需要改很多地方
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 def extract_responses(assistant_message):
@@ -54,7 +55,12 @@ def extract_json(assistant_message, default_output=None):
     return dict.keys()
 
 
-def get_responses(user_message, model="gpt-4", temperature=0.4):
+def get_responses(user_message, model="gpt-4", temperature=0.4, openai_key = None):
+    if openai.api_key is None and openai_key is None:
+        raise ValueError("OpenAI API key must be provided.")
+    if openai_key is not None:
+        openai.api_key = openai_key
+
     conversation_history = [
         {"role": "system", "content": "You are an assistant in writing machine learning papers."}
     ]

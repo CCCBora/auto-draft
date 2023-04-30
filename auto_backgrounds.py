@@ -13,6 +13,17 @@ TOTAL_PROMPTS_TOKENS = 0
 TOTAL_COMPLETION_TOKENS = 0
 
 
+def hash_name(title, description):
+    '''
+    For same title and description, it should return the same value.
+    '''
+    name = title + description
+    name = name.lower()
+    md5 = hashlib.md5()
+    md5.update(name.encode('utf-8'))
+    hashed_string = md5.hexdigest()
+    return hashed_string
+
 def log_usage(usage, generating_target, print_out=True):
     global TOTAL_TOKENS
     global TOTAL_PROMPTS_TOKENS
@@ -42,7 +53,7 @@ def make_archive(source, destination):
     shutil.move('%s.%s'%(name,format), destination)
     return destination
 
-def pipeline(paper, section, save_to_path, model):
+def pipeline(paper, section, save_to_path, model, openai_key=None):
     """
     The main pipeline of generating a section.
         1. Generate prompts.
@@ -75,7 +86,7 @@ def pipeline(paper, section, save_to_path, model):
 
 
 
-def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
+def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4", openai_key=None):
     paper = {}
     paper_body = {}
 
@@ -119,6 +130,15 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
     print(f"The paper {title} has been generated. Saved to {save_to_path}.")
     # shutil.make_archive("output.zip", 'zip', save_to_path)
     return make_archive(destination_folder, "output.zip")
+
+
+def fake_generate_backgrounds(title, description, openai_key = None):
+    """
+    This function is used to test the whole pipeline without calling OpenAI API.
+    """
+    filename = hash_name(title, description) + ".zip"
+    return make_archive("sample-output.pdf", filename)
+
 
 if __name__ == "__main__":
     title = "Reinforcement Learning"

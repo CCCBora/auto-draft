@@ -44,5 +44,8 @@ Page 1            |  Page 2
 :-------------------------:|:-------------------------:
 ![](assets/page1.png "Page-1") |  ![](assets/page2.png "Page-2") 
 
+# License
+This project is licensed under the MIT License. 
+Some parts of the code are under different licenses, as listed below:
 
-
+* `latex-flatten.py`: Licensed under the Unlicense. Original source: [rekka/latex-flatten](https://github.com/rekka/latex-flatten).
