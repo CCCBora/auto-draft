@@ -1,0 +1,50 @@
+import os
+import boto3
+import hashlib
+
+access_key_id = os.environ['AWS_ACCESS_KEY_ID']
+secret_access_key = os.environ['AWS_SECRET_ACCESS_KEY']
+bucket_name = "hf-storage"
+
+session = boto3.Session(
+    aws_access_key_id=access_key_id,
+    aws_secret_access_key=secret_access_key,
+)
+
+s3 = session.resource('s3')
+bucket = s3.Bucket(bucket_name)
+
+def upload_file(file_name, target_name=None):
+    if target_name is None:
+        target_name = file_name
+    try:
+        s3.meta.client.upload_file(Filename=file_name, Bucket=bucket_name, Key=target_name)
+        print(f"The file {file_name} has been uploaded!")
+    except:
+        print("Uploading failed!")
+
+def list_all_files():
+    return [obj.key for obj in bucket.objects.all()]
+
+def download_file(file_name):
+    ''' Download `file_name` from the bucket. todo:check existence before downloading!
+    Bucket (str) – The name of the bucket to download from.
+    Key (str) – The name of the key to download from.
+    Filename (str) – The path to the file to download to.
+    '''
+    try:
+        s3.meta.client.download_file(Bucket=bucket_name, Key=file_name, Filename=file_name)
+        print(f"The file {file_name} has been downloaded!")
+    except:
+        print("Uploading failed!")
+
+def hash_name(title, description):
+    '''
+    For same title and description, it should return the same value.
+    '''
+    name = title + description
+    name = name.lower()
+    md5 = hashlib.md5()
+    md5.update(name.encode('utf-8'))
+    hashed_string = md5.hexdigest()
+    return hashed_string
