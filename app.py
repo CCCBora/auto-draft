@@ -6,13 +6,13 @@ openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 if access_key_id is None or secret_access_key is None:
-    print("Access keys are not provided. Outputs cannot be saved to AWS Cloud Storage.")
+    print("Access keys are not provided. Outputs cannot be saved to AWS Cloud Storage.\n")
     IS_CACHE_AVAILABLE = False
 else:
     IS_CACHE_AVAILABLE = True
 
 if openai_key is None:
-    print("OPENAI_API_KEY is not found in environment variables. The output may not be generated.")
+    print("OPENAI_API_KEY is not found in environment variables. The output may not be generated.\n")
     IS_OPENAI_API_KEY_AVAILABLE = False
 else:
     # todo: check if this key is available or not
@@ -25,7 +25,7 @@ def clear_inputs(text1, text2):
 
 
 def wrapped_generate_backgrounds(title, description, openai_key = None, cache_mode = True):
-    # if `cache_mode` is True, then follow the following logic:
+    # if `cache_mode` is True, then follow the following steps:
     #        check if "title"+"description" have been generated before
     #        if so, download from the cloud storage, return it
     #        if not, generate the result.
@@ -67,7 +67,8 @@ with gr.Blocks() as demo:
     ''')
     with gr.Row():
         with gr.Column():
-            key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=not IS_OPENAI_API_KEY_AVAILABLE)
+            # key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=not IS_OPENAI_API_KEY_AVAILABLE)
+            key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=False)
             title = gr.Textbox(value="Deep Reinforcement Learning", lines=1, max_lines=1, label="Title")
             description = gr.Textbox(lines=5, label="Description (Optional)")
 
@@ -75,15 +76,13 @@ with gr.Blocks() as demo:
                 clear_button = gr.Button("Clear")
                 submit_button = gr.Button("Submit")
         with gr.Column():
-            style_mapping = {True: "color:white;background-color:green", False: "color:white;background-color:red"}
+            style_mapping = {True: "color:white;background-color:green", False: "color:white;background-color:red"} #todo: to match website's style
             availablity_mapping = {True: "AVAILABLE", False: "NOT AVAILABLE"}
             gr.Markdown(f'''## Huggingface Space Status  
              当`OpenAI API`显示AVAILABLE的时候这个Space可以直接使用.    
-             当`OpenAI API`显示UNAVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用. 
+             当`OpenAI API`显示UNAVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用 (暂时不支持). 
             `OpenAI API`: <span style="{style_mapping[IS_OPENAI_API_KEY_AVAILABLE]}">{availablity_mapping[IS_OPENAI_API_KEY_AVAILABLE]}</span>.  `Cache`: <span style="{style_mapping[IS_CACHE_AVAILABLE]}">{availablity_mapping[IS_CACHE_AVAILABLE]}</span>.''')
             file_output = gr.File(label="Output")
-
-
 
     clear_button.click(fn=clear_inputs, inputs=[title, description], outputs=[title, description])
     submit_button.click(fn=wrapped_generate_backgrounds, inputs=[title, description, key], outputs=file_output)
