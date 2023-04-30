@@ -6,7 +6,7 @@ import logging
 log = logging.getLogger(__name__)
 
 # todo: 将api_key通过函数传入; 需要改很多地方
-# openai.api_key = os.environ['OPENAI_API_KEY']
+openai.api_key = os.environ['OPENAI_API_KEY']
 
 def extract_responses(assistant_message):
     # pattern = re.compile(r"f\.write\(r'{1,3}(.*?)'{0,3}\){0,1}$", re.DOTALL)
