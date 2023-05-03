@@ -4,6 +4,12 @@ import openai
 from auto_backgrounds import generate_backgrounds, fake_generator
 from auto_draft import generate_draft
 
+# todo:
+#   1. update README.md and introduction in app.py
+#   2. update QQ group and Organization cards
+#   3. update autodraft.py to generate a whole paper
+#   4. add auto_polishing function
+
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -17,7 +23,6 @@ if openai_key is None:
     print("OPENAI_API_KEY is not found in environment variables. The output may not be generated.\n")
     IS_OPENAI_API_KEY_AVAILABLE = False
 else:
-    # todo: check if this key is available or not
     openai.api_key = openai_key
     try:
         openai.Model.list()
@@ -55,7 +60,7 @@ def wrapped_generator(title, description, openai_key = None,
             return file_name
         else:
             # generate the result.
-            # output = fake_generate_backgrounds(title, description, openai_key)
+            # output = fake_generate_backgrounds(title, description, openai_key) # todo: use `generator` to control which function to use.
             output = generate_backgrounds(title, description,  template, "gpt-4")
             upload_file(file_name)
             return output
@@ -66,29 +71,28 @@ def wrapped_generator(title, description, openai_key = None,
 
 
 theme = gr.themes.Monochrome(font=gr.themes.GoogleFont("Questrial")).set(
-    background_fill_primary='#F6F6F6',
-    button_primary_background_fill="#281A39",
-    input_background_fill='#E5E4E2'
+    background_fill_primary='#E5E4E2',
+    background_fill_secondary = '#F6F6F6',
+    button_primary_background_fill="#281A39"
 )
 
 with gr.Blocks(theme=theme) as demo:
     gr.Markdown('''
-    # Auto-Draft: 文献整理辅助工具-限量免费使用
+    # Auto-Draft: 文献整理辅助工具
     
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，即可自动对这个领域的相关文献进行归纳总结.    
     
-    ***2023-04-30 Update***: 如果有更多想法和建议欢迎加入群里交流, 群号: ***249738228***.  
-    
-    ***2023-04-26 Update***: 我本月的余额用完了, 感谢乐乐老师帮忙宣传, 也感觉大家的体验和反馈! 我会按照大家的意见对功能进行改进. 下个月会把Space的访问权限限制在Huggingface的Organization里, 欢迎有兴趣的同学通过下面的链接加入! [AUTO-ACADEMIC](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM) 
+    ***2023-05-03 Update***: 在这个版本中为大家提供了输入OpenAI API Key的地址, 如果有GPT-4的API KEY的话可以在这里体验! 
+    我也会在近期提供一定的免费体验在这个Huggingface Organization里： [AUTO-ACADEMIC](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM).
+    如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.  
     
     ## 用法
     
-    输入一个领域的名称（比如Deep Reinforcement Learning), 点击Submit, 等待大概十分钟, 下载output.zip，在Overleaf上编译浏览.  
+    输入一个领域的名称（比如Deep Reinforcement Learning), 点击Submit, 等待大概十分钟, 下载.zip格式的输出，在Overleaf上编译浏览.  
     ''')
     with gr.Row():
         with gr.Column(scale=2):
             key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=not IS_OPENAI_API_KEY_AVAILABLE)
-            # key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=False)
             title = gr.Textbox(value="Deep Reinforcement Learning", lines=1, max_lines=1, label="Title")
             description = gr.Textbox(lines=5, label="Description (Optional)")
 
@@ -100,7 +104,8 @@ with gr.Blocks(theme=theme) as demo:
             availability_mapping = {True: "AVAILABLE", False: "NOT AVAILABLE"}
             gr.Markdown(f'''## Huggingface Space Status  
              当`OpenAI API`显示AVAILABLE的时候这个Space可以直接使用.    
-             当`OpenAI API`显示NOT AVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用. 
+             当`OpenAI API`显示NOT AVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用. 需要有GPT-4的API权限, 不然会报错. 
+             当`Cache`显示AVAILABLE的时候, 所有的输入和输出会被备份到我的云储存中. 显示NOT AVAILABLE的时候可以正常使用.
             `OpenAI API`: <span style="{style_mapping[IS_OPENAI_API_KEY_AVAILABLE]}">{availability_mapping[IS_OPENAI_API_KEY_AVAILABLE]}</span>.  `Cache`: <span style="{style_mapping[IS_CACHE_AVAILABLE]}">{availability_mapping[IS_CACHE_AVAILABLE]}</span>.''')
             file_output = gr.File(label="Output")
 

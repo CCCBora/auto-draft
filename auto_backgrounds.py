@@ -49,19 +49,17 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
 
     paper["title"] = title
     paper["description"] = description
-    paper["references"] = ref.to_prompts() # to_prompts(top_papers)
+    paper["references"] = ref.to_prompts()
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
 
     for section in ["introduction", "related works", "backgrounds"]:
         try:
-            # usage = pipeline(paper, section, destination_folder, model=model)
             usage = section_generation_bg(paper, section, destination_folder, model=model)
             log_usage(usage, section)
         except Exception as e:
             print(f"Failed to generate {section} due to the error: {e}")
     print(f"The paper {title} has been generated. Saved to {destination_folder}.")
-    # shutil.make_archive("output.zip", 'zip', save_to_path)
 
     input_dict = {"title": title, "description": description, "generator": "generate_backgrounds"}
     filename = hash_name(input_dict) + ".zip"
