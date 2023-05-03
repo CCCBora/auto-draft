@@ -33,7 +33,7 @@ if (access_key_id is not None) and (secret_access_key is not None):
         return [obj.key for obj in bucket.objects.all()]
 
     def download_file(file_name):
-        ''' Download `file_name` from the bucket. todo:check existence before downloading!
+        ''' Download `file_name` from the bucket.
         Bucket (str) – The name of the bucket to download from.
         Key (str) – The name of the key to download from.
         Filename (str) – The path to the file to download to.
