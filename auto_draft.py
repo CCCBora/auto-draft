@@ -88,6 +88,7 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
     paper_body = {}
 
     # Create a copy in the outputs folder.
+    # todo: use copy_templates function instead.
     now = datetime.datetime.now()
     target_name = now.strftime("outputs_%Y%m%d_%H%M%S")
     source_folder = f"latex_templates/{template}"
@@ -105,16 +106,15 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
     gpt_response, usage = get_responses(prompts, model)
     keywords = extract_keywords(gpt_response)
     log_usage(usage, "keywords")
-
-    ref = References(load_papers = "")
-    ref.collect_papers(keywords, method="arxiv")
+    ref = References(load_papers = "") #todo: allow users to upload bibfile.
+    ref.collect_papers(keywords, method="arxiv") #todo: add more methods to find related papers
     all_paper_ids = ref.to_bibtex(bibtex_path) #todo: this will used to check if all citations are in this list
 
     print(f"The paper information has been initialized. References are saved to {bibtex_path}.")
 
     paper["title"] = title
     paper["description"] = description
-    paper["references"] = ref.to_prompts() # to_prompts(top_papers)
+    paper["references"] = ref.to_prompts() #todo: see if this prompts can be compressed.
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
 

@@ -1,7 +1,11 @@
+import os
+
 def replace_title(save_to_path, title):
     # Define input and output file names
-    input_file_name = save_to_path + "template.tex"
-    output_file_name = save_to_path + "main.tex"
+    # input_file_name =  save_to_path + "/template.tex"
+    # output_file_name = save_to_path + "/main.tex"
+    input_file_name = os.path.join(save_to_path, "template.tex")
+    output_file_name = os.path.join(save_to_path , "main.tex")
 
     # Open the input file and read its content
     with open(input_file_name, 'r') as infile:
@@ -15,6 +19,9 @@ def replace_title(save_to_path, title):
         outfile.write(content)
 
 
-# return all string in \cite{...}
+# return all string in \cite{...}.
+
+# check if citations are in bibtex.
+
 
 # replace citations
