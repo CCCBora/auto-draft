@@ -1,28 +1,11 @@
 from utils.references import References
-from utils.prompts import generate_bg_keywords_prompts, generate_bg_summary_prompts
-from utils.gpt_interaction import get_responses, extract_responses, extract_keywords, extract_json
-from utils.tex_processing import replace_title
-import datetime
-import shutil
-import time
+from utils.file_operations import hash_name, make_archive, copy_templates
+from section_generator import section_generation_bg, keywords_generation
 import logging
-import os
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
 TOTAL_COMPLETION_TOKENS = 0
-
-
-def hash_name(title, description):
-    '''
-    For same title and description, it should return the same value.
-    '''
-    name = title + description
-    name = name.lower()
-    md5 = hashlib.md5()
-    md5.update(name.encode('utf-8'))
-    hashed_string = md5.hexdigest()
-    return hashed_string
 
 def log_usage(usage, generating_target, print_out=True):
     global TOTAL_TOKENS
@@ -43,70 +26,19 @@ def log_usage(usage, generating_target, print_out=True):
         print(message)
     logging.info(message)
 
-def make_archive(source, destination):
-    base = os.path.basename(destination)
-    name = base.split('.')[0]
-    format = base.split('.')[1]
-    archive_from = os.path.dirname(source)
-    archive_to = os.path.basename(source.strip(os.sep))
-    shutil.make_archive(name, format, archive_from, archive_to)
-    shutil.move('%s.%s'%(name,format), destination)
-    return destination
-
-def pipeline(paper, section, save_to_path, model, openai_key=None):
-    """
-    The main pipeline of generating a section.
-        1. Generate prompts.
-        2. Get responses from AI assistant.
-        3. Extract the section text.
-        4. Save the text to .tex file.
-    :return usage
-    """
-    print(f"Generating {section}...")
-    prompts = generate_bg_summary_prompts(paper, section)
-    gpt_response, usage = get_responses(prompts, model)
-    output = extract_responses(gpt_response)
-    paper["body"][section] = output
-    tex_file = save_to_path + f"{section}.tex"
-    if section == "abstract":
-        with open(tex_file, "w") as f:
-            f.write(r"\begin{abstract}")
-        with open(tex_file, "a") as f:
-            f.write(output)
-        with open(tex_file, "a") as f:
-            f.write(r"\end{abstract}")
-    else:
-        with open(tex_file, "w") as f:
-            f.write(f"\section{{{section.upper()}}}\n")
-        with open(tex_file, "a") as f:
-            f.write(output)
-    time.sleep(5)
-    print(f"{section} has been generated. Saved to {tex_file}.")
-    return usage
-
-
-
-def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4", openai_key=None):
+def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
     paper = {}
     paper_body = {}
 
     # Create a copy in the outputs folder.
-    now = datetime.datetime.now()
-    target_name = now.strftime("outputs_%Y%m%d_%H%M%S")
-    source_folder = f"latex_templates/{template}"
-    destination_folder = f"outputs/{target_name}"
-    shutil.copytree(source_folder, destination_folder)
-
-    bibtex_path = destination_folder + "/ref.bib"
-    save_to_path = destination_folder +"/"
-    replace_title(save_to_path, "A Survey on " + title)
-    logging.basicConfig( level=logging.INFO, filename=save_to_path+"generation.log")
+    bibtex_path, destination_folder = copy_templates(template, title)
+    logging.basicConfig(level=logging.INFO, filename=destination_folder + "/generation.log")
 
     # Generate keywords and references
     print("Initialize the paper information ...")
-    prompts = generate_bg_keywords_prompts(title, description)
-    gpt_response, usage = get_responses(prompts, model)
-    keywords = extract_keywords(gpt_response)
+    input_dict = {"title": title, "description": description}
+    keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo")
+    print(f"keywords: {keywords}")
     log_usage(usage, "keywords")
 
     ref = References(load_papers = "")
@@ -123,28 +55,23 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
 
     for section in ["introduction", "related works", "backgrounds"]:
         try:
-            usage = pipeline(paper, section, save_to_path, model=model)
+            # usage = pipeline(paper, section, destination_folder, model=model)
+            usage = section_generation_bg(paper, section, destination_folder, model=model)
             log_usage(usage, section)
         except Exception as e:
             print(f"Failed to generate {section} due to the error: {e}")
-    print(f"The paper {title} has been generated. Saved to {save_to_path}.")
+    print(f"The paper {title} has been generated. Saved to {destination_folder}.")
     # shutil.make_archive("output.zip", 'zip', save_to_path)
-    return make_archive(destination_folder, "output.zip")
+
+    input_dict = {"title": title, "description": description, "generator": "generate_backgrounds"}
+    filename = hash_name(input_dict) + ".zip"
+    return make_archive(destination_folder, filename)
 
 
-def fake_generate_backgrounds(title, description, openai_key = None):
+def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
     """
     This function is used to test the whole pipeline without calling OpenAI API.
     """
-    filename = hash_name(title, description) + ".zip"
+    input_dict = {"title": title, "description": description, "generator": "generate_backgrounds"}
+    filename = hash_name(input_dict) + ".zip"
     return make_archive("sample-output.pdf", filename)
-
-
-if __name__ == "__main__":
-    title = "Reinforcement Learning"
-    description = ""
-    template = "Summary"
-    model = "gpt-4"
-    # model = "gpt-3.5-turbo"
-
-    generate_backgrounds(title, description, template, model)

@@ -16,8 +16,8 @@ BG_INSTRUCTIONS = {"introduction": "Please include four paragraph: Establishing 
 
 def generate_keywords_prompts(title, description="", num_refs=5):
     prompts = f"I am writing a machine learning paper with the title '{title}'. {description}\n" \
-                f"Please generate three to five keywords. For each keyword, rate it from 1 to {num_refs}; the larger number means more important." \
-                r"Response in a dictionary format like {\"keyword1\":1, \"keyword2\":3}."
+                f"Generate three to five keywords. For each keyword, rate it from 1 to {num_refs}; the larger number means more important." \
+                r"Your response must be in JSON format like {\"keyword1\":1, \"keyword2\":3}."
     return prompts
 
 def generate_rename_prompts(paper_info, section):
@@ -69,15 +69,6 @@ def generate_paper_prompts(paper_info, section):
         raise NotImplementedError
 
     log.info(f"Generated prompts for {section}: {prompts}")
-    return prompts
-
-
-
-
-def generate_bg_keywords_prompts(title, description="", num_refs=5):
-    prompts = f"I am writing a survey on the topic '{title}'. {description}\n" \
-                f"Please generate three to five keywords. For each keyword, rate it from 1 to {num_refs}; the larger number means more important." \
-                r"Response in a dictionary format like {keyword1:1, keyword2:3}."
     return prompts
 
 

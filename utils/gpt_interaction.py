@@ -1,12 +1,10 @@
 import openai
 import re
-import os
 import json
 import logging
+
 log = logging.getLogger(__name__)
 
-# todo: 将api_key通过函数传入; 需要改很多地方
-# openai.api_key = os.environ['OPENAI_API_KEY']
 
 def extract_responses(assistant_message):
     # pattern = re.compile(r"f\.write\(r'{1,3}(.*?)'{0,3}\){0,1}$", re.DOTALL)
@@ -19,9 +17,10 @@ def extract_responses(assistant_message):
         log.info(f"assistant_message: {assistant_message}")
         return assistant_message
 
+
 def extract_keywords(assistant_message, default_keywords=None):
     if default_keywords is None:
-        default_keywords = {"machine learning":5}
+        default_keywords = {"machine learning": 5}
 
     try:
         keywords = json.loads(assistant_message)
@@ -30,6 +29,7 @@ def extract_keywords(assistant_message, default_keywords=None):
         log.info(f"assistant_message: {assistant_message}")
         return default_keywords
     return keywords
+
 
 def extract_section_name(assistant_message, default_section_name=""):
     try:
@@ -55,7 +55,7 @@ def extract_json(assistant_message, default_output=None):
     return dict.keys()
 
 
-def get_responses(user_message, model="gpt-4", temperature=0.4, openai_key = None):
+def get_responses(user_message, model="gpt-4", temperature=0.4, openai_key=None):
     if openai.api_key is None and openai_key is None:
         raise ValueError("OpenAI API key must be provided.")
     if openai_key is not None:
@@ -79,8 +79,8 @@ def get_responses(user_message, model="gpt-4", temperature=0.4, openai_key = Non
 
 if __name__ == "__main__":
     test_strings = [r"f.write(r'hello world')", r"f.write(r'''hello world''')", r"f.write(r'''hello world",
-                     r"f.write(r'''hello world'", r'f.write(r"hello world")', r'f.write(r"""hello world""")',
-                     r'f.write(r"""hello world"', r'f.write(r"""hello world']
+                    r"f.write(r'''hello world'", r'f.write(r"hello world")', r'f.write(r"""hello world""")',
+                    r'f.write(r"""hello world"', r'f.write(r"""hello world']
     for input_string in test_strings:
         print("input_string: ", input_string)
         pattern = re.compile(r"f\.write\(r['\"]{1,3}(.*?)['\"]{0,3}\){0,1}$", re.DOTALL)
