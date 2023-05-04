@@ -45,8 +45,8 @@ def wrapped_generator(title, description, openai_key = None,
     if generator is None:
         # todo: add a Dropdown to select which generator to use.
         # generator = generate_backgrounds
-        # generator = generate_draft
-        generator = fake_generator
+        generator = generate_draft
+        # generator = fake_generator
     if openai_key is not None:
         openai.api_key = openai_key
         openai.Model.list()
