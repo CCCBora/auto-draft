@@ -1,3 +1,5 @@
+import os.path
+
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
@@ -37,7 +39,7 @@ def _generation_setup(title, description="", template="ICLR2022", model="gpt-4")
 
     # Create a copy in the outputs folder.
     bibtex_path, destination_folder = copy_templates(template, title)
-    logging.basicConfig(level=logging.INFO, filename=destination_folder + "/generation.log")
+    logging.basicConfig(level=logging.INFO, filename=os.path.join(destination_folder, "generation.log") )
 
     # Generate keywords and references
     print("Initialize the paper information ...")
@@ -106,6 +108,7 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
             print(message)
             logging.info(message)
             max_attempts = 2
+            # todo: make this part more compact
             # re-try `max_attempts` time
             for i in range(max_attempts):
                 time.sleep(20)
