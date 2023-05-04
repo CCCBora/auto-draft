@@ -5,7 +5,6 @@ from auto_backgrounds import generate_backgrounds, fake_generator, generate_draf
 from utils.file_operations import hash_name
 
 # todo:
-#   1. update README.md and introduction in app.py
 #   2. update QQ group and Organization cards
 #   4. add auto_polishing function
 #   5. Use Completion to substitute some simple task (including: writing abstract, conclusion, generate keywords, generate figures...)
@@ -89,7 +88,7 @@ with gr.Blocks(theme=theme) as demo:
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试。通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
     
     ***2023-05-03 Update***: 在公开版本中为大家提供了输入OpenAI API Key的地址, 如果有GPT-4的API KEY的话可以在这里体验! 
-    我也会在近期提供一定的免费体验在这个Huggingface Organization里： [AUTO-ACADEMIC](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM).
+    在这个Huggingface Organization里也提供一定额度的免费体验： [AUTO-ACADEMIC](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM).
     如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.  
     
     ## 用法
@@ -112,7 +111,7 @@ with gr.Blocks(theme=theme) as demo:
             gr.Markdown(f'''## Huggingface Space Status  
              当`OpenAI API`显示AVAILABLE的时候这个Space可以直接使用.    
              当`OpenAI API`显示NOT AVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用. 需要有GPT-4的API权限. 
-             当`Cache`显示AVAILABLE的时候, 所有的输入和输出会被备份到我的云储存中. 显示NOT AVAILABLE的时候不影响实际使用.
+             当`Cache`显示AVAILABLE的时候, 所有的输入和输出会被备份到我的云储存中. 显示NOT AVAILABLE的时候不影响实际使用. 
             `OpenAI API`: <span style="{style_mapping[IS_OPENAI_API_KEY_AVAILABLE]}">{availability_mapping[IS_OPENAI_API_KEY_AVAILABLE]}</span>.  `Cache`: <span style="{style_mapping[IS_CACHE_AVAILABLE]}">{availability_mapping[IS_CACHE_AVAILABLE]}</span>.''')
             file_output = gr.File(label="Output")
 
