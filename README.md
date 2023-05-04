@@ -20,7 +20,7 @@ python_version: 3.10.10
 # 体验地址  
 以下链接提供简单功能的免费体验. 如果需要更定制化的功能, 请参照*使用方法*进行本地部署和自行修改.
 
-https://huggingface.co/spaces/auto-academic/auto-draft
+https://huggingface.co/spaces/auto-academic/auto-draft-private
 
 # 使用方法 
 1. 克隆此仓库：
