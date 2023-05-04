@@ -1,11 +1,12 @@
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
-from section_generator import section_generation_bg, keywords_generation
+from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
 import logging
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
 TOTAL_COMPLETION_TOKENS = 0
+
 
 def log_usage(usage, generating_target, print_out=True):
     global TOTAL_TOKENS
@@ -26,7 +27,7 @@ def log_usage(usage, generating_target, print_out=True):
         print(message)
     logging.info(message)
 
-def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
+def _generation_setup(title, description="", template="ICLR2022", model="gpt-4"):
     paper = {}
     paper_body = {}
 
@@ -41,9 +42,9 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
     print(f"keywords: {keywords}")
     log_usage(usage, "keywords")
 
-    ref = References(load_papers = "")
+    ref = References(load_papers="")
     ref.collect_papers(keywords, method="arxiv")
-    all_paper_ids = ref.to_bibtex(bibtex_path) #todo: this will used to check if all citations are in this list
+    all_paper_ids = ref.to_bibtex(bibtex_path)  # todo: this will used to check if all citations are in this list
 
     print(f"The paper information has been initialized. References are saved to {bibtex_path}.")
 
@@ -52,6 +53,12 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
     paper["references"] = ref.to_prompts()
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
+    return paper, destination_folder, all_paper_ids
+
+
+
+def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
+    paper, destination_folder, _ = _generation_setup(title, description, template, model)
 
     for section in ["introduction", "related works", "backgrounds"]:
         try:
@@ -70,6 +77,31 @@ def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
     """
     This function is used to test the whole pipeline without calling OpenAI API.
     """
-    input_dict = {"title": title, "description": description, "generator": "generate_backgrounds"}
+    input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
     return make_archive("sample-output.pdf", filename)
+
+
+def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
+    paper, destination_folder, _ = _generation_setup(title, description, template, model)
+
+    print("Generating figures ...")
+    usage = figures_generation(paper, destination_folder, model="gpt-3.5-turbo")
+    # todo: use `figures_generation` function to complete remainings
+    # prompts = generate_experiments_prompts(paper)
+    # gpt_response, usage = get_responses(prompts, model)
+    # list_of_methods = list(extract_json(gpt_response))
+    log_usage(usage, "figures")
+    # generate_random_figures(list_of_methods, save_to_path + "comparison.png")
+
+    # for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
+    for section in ["introduction", "related works", "backgrounds", "experiments", "conclusion", "abstract"]:
+        try:
+            usage = section_generation(paper, section, destination_folder, model=model)
+            log_usage(usage, section)
+        except Exception as e:
+            print(f"Failed to generate {section} due to the error: {e}")
+
+    input_dict = {"title": title, "description": description, "generator": "generate_draft"}
+    filename = hash_name(input_dict) + ".zip"
+    return make_archive(destination_folder, filename)

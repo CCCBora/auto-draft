@@ -1,14 +1,14 @@
 import gradio as gr
 import os
 import openai
-from auto_backgrounds import generate_backgrounds, fake_generator
-from auto_draft import generate_draft
+from auto_backgrounds import generate_backgrounds, fake_generator, generate_draft
+from utils.file_operations import hash_name
 
 # todo:
 #   1. update README.md and introduction in app.py
 #   2. update QQ group and Organization cards
-#   3. update autodraft.py to generate a whole paper
 #   4. add auto_polishing function
+#   5. Use Completion to substitute some simple task (including: writing abstract, conclusion, generate keywords, generate figures...)
 
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
@@ -44,16 +44,22 @@ def wrapped_generator(title, description, openai_key = None,
     #        if so, download from the cloud storage, return it
     #        if not, generate the result.
     if generator is None:
-        generator = generate_backgrounds
+        # todo: add a Dropdown to select which generator to use.
+        # generator = generate_backgrounds
+        # generator = generate_draft
+        generator = fake_generator
     if openai_key is not None:
         openai.api_key = openai_key
         openai.Model.list()
 
     if cache_mode:
-        from utils.storage import list_all_files, hash_name, download_file, upload_file
+        from utils.storage import list_all_files, download_file, upload_file
         # check if "title"+"description" have been generated before
-        file_name = hash_name(title, description) + ".zip"
+
+        input_dict = {"title": title, "description": description, "generator": "generate_draft"} #todo: modify here also
+        file_name = hash_name(input_dict) + ".zip"
         file_list = list_all_files()
+        # print(f"{file_name} will be generated. Check the file list {file_list}")
         if file_name in file_list:
             # download from the cloud storage, return it
             download_file(file_name)
@@ -61,12 +67,12 @@ def wrapped_generator(title, description, openai_key = None,
         else:
             # generate the result.
             # output = fake_generate_backgrounds(title, description, openai_key) # todo: use `generator` to control which function to use.
-            output = generate_backgrounds(title, description,  template, "gpt-4")
-            upload_file(file_name)
+            output = generator(title, description,  template, "gpt-4")
+            upload_file(output)
             return output
     else:
         # output = fake_generate_backgrounds(title, description, openai_key)
-        output = generate_backgrounds(title, description,  template, "gpt-4")
+        output = generator(title, description,  template, "gpt-4")
         return output
 
 
@@ -80,21 +86,22 @@ with gr.Blocks(theme=theme) as demo:
     gr.Markdown('''
     # Auto-Draft: 文献整理辅助工具
     
-    本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_backgrounds功能的测试。通过输入一个领域的名称（比如Deep Reinforcement Learning)，即可自动对这个领域的相关文献进行归纳总结.    
+    本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试。通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
     
-    ***2023-05-03 Update***: 在这个版本中为大家提供了输入OpenAI API Key的地址, 如果有GPT-4的API KEY的话可以在这里体验! 
+    ***2023-05-03 Update***: 在公开版本中为大家提供了输入OpenAI API Key的地址, 如果有GPT-4的API KEY的话可以在这里体验! 
     我也会在近期提供一定的免费体验在这个Huggingface Organization里： [AUTO-ACADEMIC](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM).
     如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.  
     
     ## 用法
     
-    输入一个领域的名称（比如Deep Reinforcement Learning), 点击Submit, 等待大概十分钟, 下载.zip格式的输出，在Overleaf上编译浏览.  
+    输入想要生成的论文名称（比如Playing Atari with Deep Reinforcement Learning), 点击Submit, 等待大概十分钟, 下载.zip格式的输出，在Overleaf上编译浏览.  
     ''')
     with gr.Row():
         with gr.Column(scale=2):
             key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=not IS_OPENAI_API_KEY_AVAILABLE)
-            title = gr.Textbox(value="Deep Reinforcement Learning", lines=1, max_lines=1, label="Title")
-            description = gr.Textbox(lines=5, label="Description (Optional)")
+            # generator = gr.Dropdown(choices=["学术论文", "文献总结"], value="文献总结", label="Selection", info="目前支持生成'学术论文'和'文献总结'.", interactive=True)
+            title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1, label="Title", info="论文标题")
+            description = gr.Textbox(lines=5, label="Description (Optional)", visible=False)
 
             with gr.Row():
                 clear_button = gr.Button("Clear")
@@ -104,8 +111,8 @@ with gr.Blocks(theme=theme) as demo:
             availability_mapping = {True: "AVAILABLE", False: "NOT AVAILABLE"}
             gr.Markdown(f'''## Huggingface Space Status  
              当`OpenAI API`显示AVAILABLE的时候这个Space可以直接使用.    
-             当`OpenAI API`显示NOT AVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用. 需要有GPT-4的API权限, 不然会报错. 
-             当`Cache`显示AVAILABLE的时候, 所有的输入和输出会被备份到我的云储存中. 显示NOT AVAILABLE的时候可以正常使用.
+             当`OpenAI API`显示NOT AVAILABLE的时候这个Space可以通过在左侧输入OPENAI KEY来使用. 需要有GPT-4的API权限. 
+             当`Cache`显示AVAILABLE的时候, 所有的输入和输出会被备份到我的云储存中. 显示NOT AVAILABLE的时候不影响实际使用.
             `OpenAI API`: <span style="{style_mapping[IS_OPENAI_API_KEY_AVAILABLE]}">{availability_mapping[IS_OPENAI_API_KEY_AVAILABLE]}</span>.  `Cache`: <span style="{style_mapping[IS_CACHE_AVAILABLE]}">{availability_mapping[IS_CACHE_AVAILABLE]}</span>.''')
             file_output = gr.File(label="Output")
 
