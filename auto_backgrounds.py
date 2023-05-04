@@ -2,6 +2,7 @@ from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
 import logging
+import time
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
@@ -104,6 +105,19 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
             message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
             print(message)
             logging.info(message)
+            max_attempts = 2
+            # re-try `max_attempts` time
+            for i in range(max_attempts):
+                time.sleep(20)
+                try:
+                    usage = section_generation(paper, section, destination_folder, model=model)
+                    log_usage(usage, section)
+                    e = None
+                except Exception as e:
+                    pass
+                if e is None:
+                    break
+
 
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
