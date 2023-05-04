@@ -7,7 +7,12 @@ from utils.file_operations import hash_name
 # todo:
 #   2. update QQ group and Organization cards
 #   4. add auto_polishing function
-#   5. Use Completion to substitute some simple task (including: writing abstract, conclusion, generate keywords, generate figures...)
+#   5. Use some simple method for simple tasks (including: writing abstract, conclusion, generate keywords, generate figures...)
+#       5.1 Use GPT 3.5 for abstract, conclusion, ...
+#       5.2 Use local LLM to generate keywords, figures, ...
+#       5.3 Use embedding to find most related papers (find a paper dataset)
+#       5.4 Use Segmantic Scholar API instead of Arxiv API.
+#   6. get logs when the procedure is not completed.
 
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')

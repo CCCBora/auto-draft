@@ -90,12 +90,13 @@ def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
 def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
     paper, destination_folder, _ = _generation_setup(title, description, template, model)
 
-    print("Generating figures ...")
-    usage = figures_generation(paper, destination_folder, model="gpt-3.5-turbo")
-    log_usage(usage, "figures")
+    # todo: `list_of_methods` failed to be generated; find a solution ...
+    # print("Generating figures ...")
+    # usage = figures_generation(paper, destination_folder, model="gpt-3.5-turbo")
+    # log_usage(usage, "figures")
 
     # for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
-    for section in ["introduction", "related works", "backgrounds", "experiments", "conclusion", "abstract"]:
+    for section in ["introduction", "related works", "backgrounds", "abstract"]:
         try:
             usage = section_generation(paper, section, destination_folder, model=model)
             log_usage(usage, section)
