@@ -28,6 +28,9 @@ def log_usage(usage, generating_target, print_out=True):
     logging.info(message)
 
 def _generation_setup(title, description="", template="ICLR2022", model="gpt-4"):
+    '''
+    todo: use `model` to control which model to use; may use another method to generate keywords or collect references
+    '''
     paper = {}
     paper_body = {}
 
@@ -65,8 +68,10 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
             usage = section_generation_bg(paper, section, destination_folder, model=model)
             log_usage(usage, section)
         except Exception as e:
-            print(f"Failed to generate {section} due to the error: {e}")
-    print(f"The paper {title} has been generated. Saved to {destination_folder}.")
+            message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
+            print(message)
+            logging.info(message)
+    print(f"The paper '{title}' has been generated. Saved to {destination_folder}.")
 
     input_dict = {"title": title, "description": description, "generator": "generate_backgrounds"}
     filename = hash_name(input_dict) + ".zip"
@@ -87,12 +92,7 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
 
     print("Generating figures ...")
     usage = figures_generation(paper, destination_folder, model="gpt-3.5-turbo")
-    # todo: use `figures_generation` function to complete remainings
-    # prompts = generate_experiments_prompts(paper)
-    # gpt_response, usage = get_responses(prompts, model)
-    # list_of_methods = list(extract_json(gpt_response))
     log_usage(usage, "figures")
-    # generate_random_figures(list_of_methods, save_to_path + "comparison.png")
 
     # for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
     for section in ["introduction", "related works", "backgrounds", "experiments", "conclusion", "abstract"]:
@@ -100,7 +100,9 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
             usage = section_generation(paper, section, destination_folder, model=model)
             log_usage(usage, section)
         except Exception as e:
-            print(f"Failed to generate {section} due to the error: {e}")
+            message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
+            print(message)
+            logging.info(message)
 
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"

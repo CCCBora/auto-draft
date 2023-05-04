@@ -72,7 +72,7 @@ def section_generation(paper, section, save_to_path, model):
             f.write(f"\section{{{section.upper()}}}\n")
         with open(tex_file, "a") as f:
             f.write(output)
-    # time.sleep(5)
+    time.sleep(5)
     print(f"{section} has been generated. Saved to {tex_file}.")
     return usage
 
