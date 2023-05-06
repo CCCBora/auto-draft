@@ -25,3 +25,5 @@ def replace_title(save_to_path, title):
 
 
 # replace citations
+
+# sometimes the output may include thebibliography and bibitem . remove all of it.
