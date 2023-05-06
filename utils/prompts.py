@@ -10,6 +10,11 @@ INSTRUCTIONS = {"introduction": "Please include five paragraph: Establishing the
                 "conclusion": "Please read the paper I have written and write the conclusion section.",
                 "abstract": "Please read the paper I have written and write the abstract."}
 
+INSTRUCTIONS["related works"] = r"Please discuss three to five main related fields to this paper. For each field, select " \
+                                r"five to ten key publications from references. For each reference, analyze its strengths and weaknesses in one or two sentences. " \
+                                r"Do not use \section{...} or \subsection{...}; use \paragraph{...} to list related fields. "
+
+
 BG_INSTRUCTIONS = {"introduction": "Please include four paragraph: Establishing the motivation for this survey. Explaining its importance and relevance to the AI community. Clearly state the coverage of this survey and the specific research questions or objectives. Briefly mention key related work for context. ",
                 "related works": r"Please discuss key publications, methods, and techniques in related research area. Analyze the strengths and weaknesses of existing methods, and present the related works in a logical manner, often chronologically. Consider using a taxonomy or categorization to structure the discussion. Do not use \section{...} or \subsection{...}; use \paragraph{...} instead. ",
                 "backgrounds": r"Please clearly state the central problem in this field. Explain the foundational theories, concepts, and principles that underpin your research using as many as mathematical formulas or equations (written in LaTeX). Introduce any necessary mathematical notations, equations, or algorithms that are central to this field (written them in LaTeX).  Do not include \section{...} but you can have \subsection{...}. ",}

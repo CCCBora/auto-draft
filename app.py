@@ -4,8 +4,8 @@ import openai
 from auto_backgrounds import generate_backgrounds, fake_generator, generate_draft
 from utils.file_operations import hash_name
 
+# note: App白屏bug：允许第三方cookie
 # todo:
-#   2. update QQ group and Organization cards
 #   4. add auto_polishing function
 #   5. Use some simple method for simple tasks (including: writing abstract, conclusion, generate keywords, generate figures...)
 #       5.1 Use GPT 3.5 for abstract, conclusion, ... (or may not)
@@ -13,6 +13,8 @@ from utils.file_operations import hash_name
 #       5.3 Use embedding to find most related papers (find a paper dataset)
 #       5.4 Use Semantic Scholar API instead of Arxiv API.
 #   6. get logs when the procedure is not completed.
+#   7. 自己的文件库； 更多的prompts
+#   8. Change prompts to langchain
 
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
