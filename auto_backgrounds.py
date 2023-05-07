@@ -30,7 +30,8 @@ def log_usage(usage, generating_target, print_out=True):
         print(message)
     logging.info(message)
 
-def _generation_setup(title, description="", template="ICLR2022", model="gpt-4"):
+def _generation_setup(title, description="", template="ICLR2022", model="gpt-4",
+                      search_engine="ss", tldr=False, max_kw_refs=10):
     '''
     todo: use `model` to control which model to use; may use another method to generate keywords or collect references
     '''
@@ -44,12 +45,12 @@ def _generation_setup(title, description="", template="ICLR2022", model="gpt-4")
     # Generate keywords and references
     print("Initialize the paper information ...")
     input_dict = {"title": title, "description": description}
-    keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo")
+    keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo", max_kw_refs=max_kw_refs)
     print(f"keywords: {keywords}")
     log_usage(usage, "keywords")
 
     ref = References(load_papers="")
-    ref.collect_papers(keywords, method="arxiv")
+    ref.collect_papers(keywords, method=search_engine, tldr=tldr)
     all_paper_ids = ref.to_bibtex(bibtex_path)  # todo: this will used to check if all citations are in this list
 
     print(f"The paper information has been initialized. References are saved to {bibtex_path}.")
@@ -90,8 +91,8 @@ def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
     return make_archive("sample-output.pdf", filename)
 
 
-def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
-    paper, destination_folder, _ = _generation_setup(title, description, template, model)
+def generate_draft(title, description="", template="ICLR2022", model="gpt-4", search_engine="ss", tldr=True, max_kw_refs=14):
+    paper, destination_folder, _ = _generation_setup(title, description, template, model, search_engine, tldr, max_kw_refs)
 
     # todo: `list_of_methods` failed to be generated; find a solution ...
     # print("Generating figures ...")
@@ -125,3 +126,10 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4"):
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
     return make_archive(destination_folder, filename)
+
+
+if __name__ == "__main__":
+    title = "Using interpretable boosting algorithms for modeling environmental and agricultural data"
+    description = ""
+    output = generate_draft(title, description, search_engine="ss", tldr=True, max_kw_refs=10)
+    print(output)
