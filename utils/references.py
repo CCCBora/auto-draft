@@ -8,6 +8,7 @@
 import requests
 import re
 
+
 #########################################################
 # Some basic tools
 #########################################################
@@ -17,6 +18,7 @@ def remove_newlines(serie):
     serie = serie.replace('  ', ' ')
     serie = serie.replace('  ', ' ')
     return serie
+
 
 #########################################################
 # Semantic Scholar (SS) API
@@ -35,10 +37,10 @@ def ss_search(keywords, limit=20, fields=None):
     return response.json()
 
 
-
 def _collect_papers_ss(keyword, counts=3, tldr=False):
     def externalIds2link(externalIds):
-        # externalIds is similar to "{'MAG': '2932819148', 'DBLP': 'conf/icml/HaarnojaZAL18', 'ArXiv': '1801.01290', 'CorpusId': 28202810}"
+        # Sample externalIds:
+        #   "{'MAG': '2932819148', 'DBLP': 'conf/icml/HaarnojaZAL18', 'ArXiv': '1801.01290', 'CorpusId': 28202810}"
         if externalIds:
             # Supports ArXiv, MAG, ACL, PubMed, Medline, PubMedCentral, DBLP, DOI
             # priority: DBLP > arXiv > (todo: MAG > CorpusId > DOI > ACL > PubMed > Mdeline > PubMedCentral)
@@ -58,7 +60,10 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
             return ""
 
     def extract_paper_id(last_name, year_str, title):
-        return last_name + year_str + title.split(' ', 1)[0]
+        pattern = r'^\w+'
+        words = re.findall(pattern, title)
+        # return last_name + year_str + title.split(' ', 1)[0]
+        return last_name + year_str + words[0]
 
     def extract_author_info(raw_authors):
         authors = [author['name'] for author in raw_authors]
@@ -67,17 +72,18 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         last_name = authors[0].split()[-1]
         return authors_str, last_name
 
-    def parse_search_results(search_results):
+    def parse_search_results(search_results_ss):
         # turn the search result to a list of paper dictionary.
         papers = []
-        for raw_paper in search_results:
+        for raw_paper in search_results_ss:
             if raw_paper["abstract"] is None:
                 continue
 
             authors_str, last_name = extract_author_info(raw_paper['authors'])
             year_str = str(raw_paper['year'])
             title = raw_paper['title']
-            journal = raw_paper['venue']
+            # some journal may contain &; replace it. e.g. journal={IEEE Power & Energy Society General Meeting}
+            journal = raw_paper['venue'].replace("&", "\\&")
             if not journal:
                 journal = "arXiv preprint"
             paper_id = extract_paper_id(last_name, year_str, title).lower()
@@ -97,6 +103,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
             }
             papers.append(result)
         return papers
+
     raw_results = ss_search(keyword, limit=counts)
     if raw_results is not None:
         search_results = raw_results['data']
@@ -104,6 +111,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         search_results = []
     results = parse_search_results(search_results)
     return results
+
 
 #########################################################
 # ArXiv API
@@ -174,9 +182,14 @@ def _collect_papers_arxiv(keyword, counts=3, tldr=False):
     results = parse_results(content)
     return results
 
+
+#########################################################
+# References Class
+#########################################################
+
 # Each `paper` is a dictionary containing (1) paper_id (2) title (3) authors (4) year (5) link (6) abstract (7) journal
 class References:
-    def __init__(self, load_papers = ""):
+    def __init__(self, load_papers=""):
         if load_papers:
             # todo: read a json file from the given path
             #       this could be used to support pre-defined references
@@ -192,7 +205,7 @@ class References:
         """
         match method:
             case "arxiv":
-                process =_collect_papers_arxiv
+                process = _collect_papers_arxiv
             case "ss":
                 process = _collect_papers_ss
             case _:
@@ -246,15 +259,16 @@ class References:
             prompts[paper["paper_id"]] = paper["abstract"]
         return prompts
 
+
 if __name__ == "__main__":
     refs = References()
     keywords_dict = {
-  "Deep Q-Networks": 15,
-  "Policy Gradient Methods": 24,
-  "Actor-Critic Algorithms": 4,
-  "Model-Based Reinforcement Learning": 13,
-  "Exploration-Exploitation Trade-off": 7
-}
+        "Deep Q-Networks": 15,
+        "Policy Gradient Methods": 24,
+        "Actor-Critic Algorithms": 4,
+        "Model-Based Reinforcement Learning": 13,
+        "Exploration-Exploitation Trade-off": 7
+    }
     refs.collect_papers(keywords_dict, method="ss", tldr=True)
     for p in refs.papers:
         print(p["paper_id"])
