@@ -13,11 +13,14 @@ from utils.file_operations import hash_name
 #       5.3 Use embedding to find most related papers (find a paper dataset)
 #   6. get logs when the procedure is not completed.
 #   7. 自己的文件库； 更多的prompts
-#   11. distinguish citep and citet
+#   8. Decide on how to generate the main part of a paper
+#   9. Load .bibtex file to generate a pre-defined references list. 
 # future:
 #   8. Change prompts to langchain
 #   4. add auto_polishing function
 #   12. Change link to more appealing color # after the website is built;
+#   1. Check if there are any duplicated citations
+#   2. Remove potential thebibliography and bibitem in .tex file
 
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
@@ -117,7 +120,8 @@ with gr.Blocks(theme=theme) as demo:
             # label="Selection", info="目前支持生成'学术论文'和'文献总结'.", interactive=True)
             title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
                                label="Title", info="论文标题")
-            description = gr.Textbox(lines=5, label="Description (Optional)", visible=False)
+            description = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
+                                     info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
 
             with gr.Row():
                 clear_button = gr.Button("Clear")
