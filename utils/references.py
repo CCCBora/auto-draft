@@ -9,9 +9,9 @@ import requests
 import re
 
 
-#########################################################
+######################################################################################################################
 # Some basic tools
-#########################################################
+######################################################################################################################
 def remove_newlines(serie):
     serie = serie.replace('\n', ' ')
     serie = serie.replace('\\n', ' ')
@@ -20,9 +20,9 @@ def remove_newlines(serie):
     return serie
 
 
-#########################################################
+######################################################################################################################
 # Semantic Scholar (SS) API
-#########################################################
+######################################################################################################################
 def ss_search(keywords, limit=20, fields=None):
     # space between the  query to be removed and replaced with +
     if fields is None:
@@ -69,7 +69,12 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         authors = [author['name'] for author in raw_authors]
 
         authors_str = " and ".join(authors)
-        last_name = authors[0].split()[-1]
+        try:
+            last_name = authors[0].split()[-1]
+        except:
+            last_name = "ma"
+        # pattern = r'^\w+'
+        # last_name = re.findall(pattern, authors[0])
         return authors_str, last_name
 
     def parse_search_results(search_results_ss):
@@ -113,9 +118,9 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
     return results
 
 
-#########################################################
+######################################################################################################################
 # ArXiv API
-#########################################################
+######################################################################################################################
 def _collect_papers_arxiv(keyword, counts=3, tldr=False):
     # Build the arXiv API query URL with the given keyword and other parameters
     def build_query_url(keyword, results_limit=3, sort_by="relevance", sort_order="descending"):
@@ -183,9 +188,9 @@ def _collect_papers_arxiv(keyword, counts=3, tldr=False):
     return results
 
 
-#########################################################
+######################################################################################################################
 # References Class
-#########################################################
+######################################################################################################################
 
 # Each `paper` is a dictionary containing (1) paper_id (2) title (3) authors (4) year (5) link (6) abstract (7) journal
 class References:

@@ -53,9 +53,14 @@ def generate_paper_prompts(paper_info, section):
 
     fundamental_subprompt = f"I am writing a machine learning paper with the title '{title}'. {description}\n"
     instruction_subprompt = f"You need to write the {section} section. {INSTRUCTIONS[section]}\n"
+    # references_subprompt = f"Please read the following references: \n{references}\n"\
+    #                         f"Every time you use information from the references, you need to cite its id after the sentence; " \
+    #                        f"for example, the sentence where you use information from 1905.09788 \cite{{1905.09788}}. " \
+    #                        f"Please avoid citing the same reference in the same paragraph. \n"
     references_subprompt = f"Please read the following references: \n{references}\n"\
-                            f"Every time you use information from the references, you need to cite its id after the sentence; " \
-                           f"for example, the sentence where you use information from 1905.09788 \cite{{1905.09788}}. " \
+                            f"Every time you use information from the references, you need to appropriately cite it (using \citep or \citet)." \
+                           f"For example of \citep, the sentence where you use information from lei2022adaptive \citep{{lei2022adaptive}}. " \
+                           f"For example of \citet, \citet{{lei2022adaptive}} claims some information. \n" \
                            f"Please avoid citing the same reference in the same paragraph. \n"
     self_subprompt = f"Here is the paper that I have written: {paper}.\n"
     output_subprompt = r"Put your response (do not include \section{...}) in the following Python script:" \
