@@ -19,7 +19,7 @@ def replace_title(save_to_path, title):
         outfile.write(content)
 
 
-# return all string in \cite{...}.
+# return all string in \cite{...} \citet{...} or \citep{...}.
 
 # check if citations are in bibtex.
 
@@ -27,3 +27,5 @@ def replace_title(save_to_path, title):
 # replace citations
 
 # sometimes the output may include thebibliography and bibitem . remove all of it.
+
+
