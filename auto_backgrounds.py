@@ -91,7 +91,7 @@ def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
     return make_archive("sample-output.pdf", filename)
 
 
-def generate_draft(title, description="", template="ICLR2022", model="gpt-4", search_engine="ss", tldr=False, max_kw_refs=5):
+def generate_draft(title, description="", template="ICLR2022", model="gpt-4", search_engine="ss", tldr=True, max_kw_refs=12):
     paper, destination_folder, _ = _generation_setup(title, description, template, model, search_engine, tldr, max_kw_refs)
 
     # todo: `list_of_methods` failed to be generated; find a solution ...

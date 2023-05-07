@@ -11,10 +11,13 @@ from utils.file_operations import hash_name
 #       5.1 Use GPT 3.5 for abstract, conclusion, ... (or may not)
 #       5.2 Use local LLM to generate keywords, figures, ...
 #       5.3 Use embedding to find most related papers (find a paper dataset)
-#       5.4 Use Semantic Scholar API instead of Arxiv API.
 #   6. get logs when the procedure is not completed.
 #   7. 自己的文件库； 更多的prompts
 #   8. Change prompts to langchain
+#   9. some references include &: journal={IEEE Power & Energy Society General Meeting}. Check them when generating it.
+#   10. some paper ids have : or - in the first word of title; remove them when generating paper id.
+#   11. distinguish citep and citet
+#   12. Change link to more appealing color
 
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
