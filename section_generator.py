@@ -76,11 +76,11 @@ def section_generation(paper, section, save_to_path, model):
     print(f"{section} has been generated. Saved to {tex_file}.")
     return usage
 
-def keywords_generation(input_dict,  model):
+def keywords_generation(input_dict,  model, max_kw_refs = 10):
     title = input_dict.get("title")
     description = input_dict.get("description", "")
     if title is not None:
-        prompts = generate_keywords_prompts(title, description)
+        prompts = generate_keywords_prompts(title, description, max_kw_refs)
         gpt_response, usage = get_responses(prompts, model)
         keywords = extract_keywords(gpt_response)
         return keywords, usage

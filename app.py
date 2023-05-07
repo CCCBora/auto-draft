@@ -4,15 +4,20 @@ import openai
 from auto_backgrounds import generate_backgrounds, fake_generator, generate_draft
 from utils.file_operations import hash_name
 
+# note: App白屏bug：允许第三方cookie
 # todo:
-#   2. update QQ group and Organization cards
-#   4. add auto_polishing function
-#   5. Use some simple method for simple tasks (including: writing abstract, conclusion, generate keywords, generate figures...)
+#   5. Use some simple method for simple tasks
+#   (including: writing abstract, conclusion, generate keywords, generate figures...)
 #       5.1 Use GPT 3.5 for abstract, conclusion, ... (or may not)
 #       5.2 Use local LLM to generate keywords, figures, ...
 #       5.3 Use embedding to find most related papers (find a paper dataset)
-#       5.4 Use Semantic Scholar API instead of Arxiv API.
 #   6. get logs when the procedure is not completed.
+#   7. 自己的文件库； 更多的prompts
+#   11. distinguish citep and citet
+# future:
+#   8. Change prompts to langchain
+#   4. add auto_polishing function
+#   12. Change link to more appealing color # after the website is built;
 
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
@@ -35,14 +40,13 @@ else:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
 
-
 def clear_inputs(text1, text2):
     return "", ""
 
 
-def wrapped_generator(title, description, openai_key = None,
-                      template = "ICLR2022",
-                      cache_mode = IS_CACHE_AVAILABLE, generator=None):
+def wrapped_generator(paper_title, paper_description, openai_api_key=None,
+                      template="ICLR2022",
+                      cache_mode=IS_CACHE_AVAILABLE, generator=None):
     # if `cache_mode` is True, then follow the following steps:
     #        check if "title"+"description" have been generated before
     #        if so, download from the cloud storage, return it
@@ -52,15 +56,16 @@ def wrapped_generator(title, description, openai_key = None,
         # generator = generate_backgrounds
         generator = generate_draft
         # generator = fake_generator
-    if openai_key is not None:
-        openai.api_key = openai_key
+    if openai_api_key is not None:
+        openai.api_key = openai_api_key
         openai.Model.list()
 
     if cache_mode:
         from utils.storage import list_all_files, download_file, upload_file
         # check if "title"+"description" have been generated before
 
-        input_dict = {"title": title, "description": description, "generator": "generate_draft"} #todo: modify here also
+        input_dict = {"title": paper_title, "description": paper_description,
+                      "generator": "generate_draft"}  # todo: modify here also
         file_name = hash_name(input_dict) + ".zip"
         file_list = list_all_files()
         # print(f"{file_name} will be generated. Check the file list {file_list}")
@@ -70,21 +75,23 @@ def wrapped_generator(title, description, openai_key = None,
             return file_name
         else:
             # generate the result.
-            # output = fake_generate_backgrounds(title, description, openai_key) # todo: use `generator` to control which function to use.
-            output = generator(title, description,  template, "gpt-4")
+            # output = fake_generate_backgrounds(title, description, openai_key)
+            # todo: use `generator` to control which function to use.
+            output = generator(paper_title, paper_description, template, "gpt-4")
             upload_file(output)
             return output
     else:
         # output = fake_generate_backgrounds(title, description, openai_key)
-        output = generator(title, description,  template, "gpt-4")
+        output = generator(paper_title, paper_description, template, "gpt-4")
         return output
 
 
-theme = gr.themes.Monochrome(font=gr.themes.GoogleFont("Questrial")).set(
-    background_fill_primary='#E5E4E2',
-    background_fill_secondary = '#F6F6F6',
-    button_primary_background_fill="#281A39"
-)
+theme = gr.themes.Default(font=gr.themes.GoogleFont("Questrial"))
+# .set(
+#     background_fill_primary='#E5E4E2',
+#     background_fill_secondary = '#F6F6F6',
+#     button_primary_background_fill="#281A39"
+# )
 
 with gr.Blocks(theme=theme) as demo:
     gr.Markdown('''
@@ -102,16 +109,20 @@ with gr.Blocks(theme=theme) as demo:
     ''')
     with gr.Row():
         with gr.Column(scale=2):
-            key =  gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key", visible=not IS_OPENAI_API_KEY_AVAILABLE)
-            # generator = gr.Dropdown(choices=["学术论文", "文献总结"], value="文献总结", label="Selection", info="目前支持生成'学术论文'和'文献总结'.", interactive=True)
-            title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1, label="Title", info="论文标题")
+            key = gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key",
+                             visible=not IS_OPENAI_API_KEY_AVAILABLE)
+            # generator = gr.Dropdown(choices=["学术论文", "文献总结"], value="文献总结",
+            # label="Selection", info="目前支持生成'学术论文'和'文献总结'.", interactive=True)
+            title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
+                               label="Title", info="论文标题")
             description = gr.Textbox(lines=5, label="Description (Optional)", visible=False)
 
             with gr.Row():
                 clear_button = gr.Button("Clear")
-                submit_button = gr.Button("Submit")
+                submit_button = gr.Button("Submit", variant="primary")
         with gr.Column(scale=1):
-            style_mapping = {True: "color:white;background-color:green", False: "color:white;background-color:red"} #todo: to match website's style
+            style_mapping = {True: "color:white;background-color:green",
+                             False: "color:white;background-color:red"}  # todo: to match website's style
             availability_mapping = {True: "AVAILABLE", False: "NOT AVAILABLE"}
             gr.Markdown(f'''## Huggingface Space Status  
              当`OpenAI API`显示AVAILABLE的时候这个Space可以直接使用.    
