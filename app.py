@@ -131,6 +131,9 @@ with gr.Blocks(theme=theme) as demo:
                                                 info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
 
                     interactive = False
+                    gr.Markdown('''
+                    ## 下面的功能我只做了UI, 还没来得及实现功能. 
+                    ''')
                     with gr.Row():
                         with gr.Column():
                             gr.Markdown('''
@@ -152,6 +155,8 @@ with gr.Blocks(theme=theme) as demo:
                             use_cache = gr.Checkbox(label="总是重新生成",
                                                     info="选择此筐表示将不会读取已经生成好的文章.",
                                                interactive = interactive)
+                            slider = gr.Slider(minimum=1, maximum=30, value=20, label="最大参考文献数目",
+                                               info="过多参考文献会超出Token数限制导致报错，这里限制最大参考文献数目.")
 
                 with gr.Row():
                     clear_button_pp = gr.Button("Clear")
