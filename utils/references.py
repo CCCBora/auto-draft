@@ -1,23 +1,72 @@
-# Generate references
-#   1. select most correlated references from "references" dataset or Arxiv search engine.
-#   2. Generate bibtex from the selected papers. --> to_bibtex()
-#   3. Generate prompts from the selected papers: --> to_prompts()
-#       {"paper_id": "paper summary"}
-
+# Each `paper` is a dictionary containing:
+#       (1) paper_id (2) title (3) authors (4) year (5) link (6) abstract (7) journal
+#
+# Generate references:
+#   `Reference` class:
+#       1. Read a given .bib file to collect papers; use `search_paper_abstract` method to fill missing abstract.
+#       2. Given some keywords; use ArXiv or Semantic Scholar API to find papers.
+#       3. Generate bibtex from the selected papers. --> to_bibtex()
+#       4. Generate prompts from the selected papers: --> to_prompts()
+#               A sample prompt: {"paper_id": "paper summary"}
 
 import requests
 import re
+import bibtexparser
+from scholarly import scholarly
+from scholarly import ProxyGenerator
 
 
 ######################################################################################################################
 # Some basic tools
 ######################################################################################################################
 def remove_newlines(serie):
+    # This function is applied to the abstract of each paper to reduce the length of prompts.
     serie = serie.replace('\n', ' ')
     serie = serie.replace('\\n', ' ')
     serie = serie.replace('  ', ' ')
     serie = serie.replace('  ', ' ')
     return serie
+
+
+def search_paper_abstract(title):
+    pg = ProxyGenerator()
+    success = pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155")
+    scholarly.use_proxy(pg)
+    # input the title of a paper, return its abstract
+    search_query = scholarly.search_pubs(title)
+    paper = next(search_query)
+    return remove_newlines(paper['bib']['abstract'])
+
+
+def load_papers_from_bibtex(bib_file_path):
+    with open(bib_file_path) as bibtex_file:
+        bib_database = bibtexparser.load(bibtex_file)
+    if len(bib_database.entries) == 0:
+        return []
+    else:
+        bib_papers = []
+        for bibitem in bib_database.entries:
+            paper_id = bibitem.get("ID")
+            title = bibitem.get("title")
+            if title is None:
+                continue
+            journal = bibitem.get("journal")
+            year = bibitem.get("year")
+            author = bibitem.get("author")
+            abstract = bibitem.get("abstract")
+            if abstract is None:
+                abstract = search_paper_abstract(title)
+            result = {
+                "paper_id": paper_id,
+                "title": title,
+                "link": "",
+                "abstract": abstract,
+                "authors": author,
+                "year": year,
+                "journal": journal
+            }
+            bib_papers.append(result)
+        return bib_papers
 
 
 ######################################################################################################################
@@ -79,7 +128,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
 
     def parse_search_results(search_results_ss):
         # turn the search result to a list of paper dictionary.
-        papers = []
+        papers_ss = []
         for raw_paper in search_results_ss:
             if raw_paper["abstract"] is None:
                 continue
@@ -100,14 +149,14 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
             result = {
                 "paper_id": paper_id,
                 "title": title,
-                "abstract": abstract,  # todo: compare results with tldr
+                "abstract": abstract,
                 "link": link,
                 "authors": authors_str,
                 "year": year_str,
                 "journal": journal
             }
-            papers.append(result)
-        return papers
+            papers_ss.append(result)
+        return papers_ss
 
     raw_results = ss_search(keyword, limit=counts)
     if raw_results is not None:
@@ -192,13 +241,13 @@ def _collect_papers_arxiv(keyword, counts=3, tldr=False):
 # References Class
 ######################################################################################################################
 
-# Each `paper` is a dictionary containing (1) paper_id (2) title (3) authors (4) year (5) link (6) abstract (7) journal
 class References:
     def __init__(self, load_papers=""):
         if load_papers:
-            # todo: read a json file from the given path
-            #       this could be used to support pre-defined references
-            pass
+            # todo: (1) too large bibtex may make have issues on token limitations; may truncate to 5 or 10
+            #       (2) google scholar didn't give a full abstract for some papers ...
+            #       (3) may use langchain to support long input
+            self.papers = load_papers_from_bibtex(load_papers)
         else:
             self.papers = []
 
@@ -266,15 +315,20 @@ class References:
 
 
 if __name__ == "__main__":
-    refs = References()
-    keywords_dict = {
-        "Deep Q-Networks": 15,
-        "Policy Gradient Methods": 24,
-        "Actor-Critic Algorithms": 4,
-        "Model-Based Reinforcement Learning": 13,
-        "Exploration-Exploitation Trade-off": 7
-    }
-    refs.collect_papers(keywords_dict, method="ss", tldr=True)
-    for p in refs.papers:
-        print(p["paper_id"])
-    print(len(refs.papers))
+    # refs = References()
+    # keywords_dict = {
+    #     "Deep Q-Networks": 15,
+    #     "Policy Gradient Methods": 24,
+    #     "Actor-Critic Algorithms": 4,
+    #     "Model-Based Reinforcement Learning": 13,
+    #     "Exploration-Exploitation Trade-off": 7
+    # }
+    # refs.collect_papers(keywords_dict, method="ss", tldr=True)
+    # for p in refs.papers:
+    #     print(p["paper_id"])
+    # print(len(refs.papers))
+
+    bib = "D:\\Projects\\auto-draft\\latex_templates\\pre_refs.bib"
+    papers = load_papers_from_bibtex(bib)
+    for paper in papers:
+        print(paper)
