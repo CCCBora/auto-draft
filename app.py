@@ -6,15 +6,12 @@ from utils.file_operations import hash_name
 
 # note: App白屏bug：允许第三方cookie
 # todo:
-#   5. Use some simple method for simple tasks
-#   (including: writing abstract, conclusion, generate keywords, generate figures...)
-#       5.1 Use GPT 3.5 for abstract, conclusion, ... (or may not)
-#       5.2 Use local LLM to generate keywords, figures, ...
-#       5.3 Use embedding to find most related papers (find a paper dataset)
-#   6. get logs when the procedure is not completed.
+#   6. get logs when the procedure is not completed. *
 #   7. 自己的文件库； 更多的prompts
-#   8. Decide on how to generate the main part of a paper
-#   9. Load .bibtex file to generate a pre-defined references list. 
+#   8. Decide on how to generate the main part of a paper * (Langchain/AutoGPT
+#   9. Load .bibtex file to generate a pre-defined references list. *
+#   1. 把paper改成纯JSON?
+#   2. 实现别的功能
 # future:
 #   8. Change prompts to langchain
 #   4. add auto_polishing function
@@ -112,20 +109,72 @@ with gr.Blocks(theme=theme) as demo:
     
     输入想要生成的论文名称（比如Playing Atari with Deep Reinforcement Learning), 点击Submit, 等待大概十分钟, 下载.zip格式的输出，在Overleaf上编译浏览.  
     ''')
+
     with gr.Row():
         with gr.Column(scale=2):
             key = gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key",
                              visible=not IS_OPENAI_API_KEY_AVAILABLE)
+
             # generator = gr.Dropdown(choices=["学术论文", "文献总结"], value="文献总结",
             # label="Selection", info="目前支持生成'学术论文'和'文献总结'.", interactive=True)
-            title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
-                               label="Title", info="论文标题")
-            description = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
-                                     info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
 
-            with gr.Row():
-                clear_button = gr.Button("Clear")
-                submit_button = gr.Button("Submit", variant="primary")
+            # 每个功能做一个tab
+            with gr.Tab("学术论文"):
+                title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
+                                   label="Title", info="论文标题")
+
+                with gr.Accordion("高级设置", open=False):
+                    description_pp = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
+                                                info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
+
+                    interactive = False
+                    with gr.Row():
+                        with gr.Column():
+                            gr.Markdown('''
+                            Upload .bib file (Optional)
+                            
+                            通过上传.bib文件来控制GPT-4模型必须参考哪些文献. 
+                            ''')
+                            bibtex_file = gr.File(label="Upload .bib file", file_types=["text"],
+                                                  interactive=interactive)
+                        with gr.Column():
+                            search_engine = gr.Dropdown(label="Search Engine",
+                                                        choices=["ArXiv", "Semantic Scholar", "Google Scholar", "None"],
+                                                        value= "Semantic Scholar",
+                                                        interactive=interactive,
+                                                        info="用于决定GPT-4用什么搜索引擎来搜索文献. 选择None的时候仅参考给定文献.")
+                            tldr = gr.Checkbox(value=True, label="TLDR;",
+                                               info="选择此筐表示将使用Semantic Scholar的TLDR作为文献的总结.",
+                                               interactive = interactive),
+                            use_cache = gr.Checkbox(label="总是重新生成",
+                                                    info="选择此筐表示将不会读取已经生成好的文章.",
+                                               interactive = interactive)
+
+                with gr.Row():
+                    clear_button_pp = gr.Button("Clear")
+                    submit_button_pp = gr.Button("Submit", variant="primary")
+
+            with gr.Tab("文献综述"):
+                gr.Markdown('''
+                <h1  style="text-align: center;">Coming soon!</h1>
+                ''')
+                # topic = gr.Textbox(value="Deep Reinforcement Learning", lines=1, max_lines=1,
+                #                    label="Topic", info="文献主题")
+                # with gr.Accordion("Advanced Setting"):
+                #     description_lr = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
+                #                              info="对希望生成的综述的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
+                # with gr.Row():
+                #     clear_button_lr = gr.Button("Clear")
+                #     submit_button_lr = gr.Button("Submit", variant="primary")
+            with gr.Tab("论文润色"):
+                gr.Markdown('''
+                <h1  style="text-align: center;">Coming soon!</h1>
+                ''')
+            with gr.Tab("帮我想想该写什么论文!"):
+                gr.Markdown('''
+                <h1  style="text-align: center;">Coming soon!</h1>
+                ''')
+
         with gr.Column(scale=1):
             style_mapping = {True: "color:white;background-color:green",
                              False: "color:white;background-color:red"}  # todo: to match website's style
@@ -137,8 +186,8 @@ with gr.Blocks(theme=theme) as demo:
             `OpenAI API`: <span style="{style_mapping[IS_OPENAI_API_KEY_AVAILABLE]}">{availability_mapping[IS_OPENAI_API_KEY_AVAILABLE]}</span>.  `Cache`: <span style="{style_mapping[IS_CACHE_AVAILABLE]}">{availability_mapping[IS_CACHE_AVAILABLE]}</span>.''')
             file_output = gr.File(label="Output")
 
-    clear_button.click(fn=clear_inputs, inputs=[title, description], outputs=[title, description])
-    submit_button.click(fn=wrapped_generator, inputs=[title, description, key], outputs=file_output)
+    clear_button_pp.click(fn=clear_inputs, inputs=[title, description_pp], outputs=[title, description_pp])
+    submit_button_pp.click(fn=wrapped_generator, inputs=[title, description_pp, key], outputs=file_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch()
