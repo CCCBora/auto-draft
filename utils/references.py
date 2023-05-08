@@ -112,7 +112,11 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         pattern = r'^\w+'
         words = re.findall(pattern, title)
         # return last_name + year_str + title.split(' ', 1)[0]
-        return last_name + year_str + words[0]
+        try:
+            output = last_name + year_str + words[0]
+        except IndexError:
+            output = last_name + year_str + title[:4]
+        return output
 
     def extract_author_info(raw_authors):
         authors = [author['name'] for author in raw_authors]
@@ -120,7 +124,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         authors_str = " and ".join(authors)
         try:
             last_name = authors[0].split()[-1]
-        except:
+        except IndexError:
             last_name = "ma"
         # pattern = r'^\w+'
         # last_name = re.findall(pattern, authors[0])

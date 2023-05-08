@@ -12,8 +12,11 @@ from utils.file_operations import hash_name
 #   9. Load .bibtex file to generate a pre-defined references list. *
 #   1. 把paper改成纯JSON?
 #   2. 实现别的功能
+#   3. Check API Key GPT-4 Support.
+#   8. Re-build some components using `langchain`
+#           - in `references.py`, use PromptTemplates.format -> str
+#           - in `gpt_interation`, use LLM
 # future:
-#   8. Change prompts to langchain
 #   4. add auto_polishing function
 #   12. Change link to more appealing color # after the website is built;
 #   1. Check if there are any duplicated citations
