@@ -150,7 +150,6 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         # turn the search result to a list of paper dictionary.
         papers_ss = []
         for raw_paper in search_results_ss:
-            print(raw_paper['title'])
             if raw_paper["abstract"] is None:
                 continue
 
@@ -170,6 +169,8 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
                 abstract = raw_paper['tldr']['text']
             else:
                 abstract = remove_newlines(raw_paper['abstract'])
+
+            # some papers have no embeddings; handle this case
             embeddings_dict = raw_paper.get('embedding')
             if embeddings_dict is None:
                 continue
@@ -203,14 +204,13 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
 ######################################################################################################################
 
 class References:
-    def __init__(self):
-        # if load_papers:
-        #     # todo: (1) too large bibtex may make have issues on token limitations; may truncate to 5 or 10
-        #     #       (2) google scholar didn't give a full abstract for some papers ...
-        #     #       (3) may use langchain to support long input
-        #     self.papers = load_papers_from_bibtex(load_papers)
-        # else:
-        self.papers = {}
+    def __init__(self, title, load_papers):
+        if load_papers is not None:
+            self.papers = {}
+            self.papers["customized_refs"] = load_papers_from_bibtex(load_papers)
+        else:
+            self.papers = {}
+        self.title = title
 
     def load_papers(self, bibtex, keyword):
         self.papers[keyword] = load_papers_from_bibtex(bibtex)
@@ -230,14 +230,14 @@ class References:
         for key, counts in keywords_dict.items():
             self.papers[key] = _collect_papers_ss(key, counts, tldr)
 
-    def find_relevant(self, max_refs=30):
-        # todo: use embeddings to evaluate
-        pass
 
-    def to_bibtex(self, path_to_bibtex="ref.bib"):
+    def to_bibtex(self, path_to_bibtex="ref.bib", max_num_refs=50):
         """
         Turn the saved paper list into bibtex file "ref.bib". Return a list of all `paper_id`.
         """
+        # todo:
+        #   use embeddings to evaluate; keep top k relevant references in papers
+        #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
         papers = self._get_papers(keyword = "_all")
 
         # clear the bibtex file
