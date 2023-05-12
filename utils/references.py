@@ -39,7 +39,7 @@ def remove_newlines(serie):
 
 def search_paper_abstract(title):
     pg = ProxyGenerator()
-    success = pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155") # todo: change this to env. var. for protection.
+    success = pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155")
     if success:
         scholarly.use_proxy(pg)
         # input the title of a paper, return its abstract
@@ -136,6 +136,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         authors_str = " and ".join(authors)
         try:
             last_name = authors[0].split()[-1]
+            last_name = last_name.replace("'", "")
         except IndexError:
             last_name = "ma"
         # pattern = r'^\w+'
@@ -149,6 +150,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
         # turn the search result to a list of paper dictionary.
         papers_ss = []
         for raw_paper in search_results_ss:
+            print(raw_paper['title'])
             if raw_paper["abstract"] is None:
                 continue
 
@@ -168,7 +170,11 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
                 abstract = raw_paper['tldr']['text']
             else:
                 abstract = remove_newlines(raw_paper['abstract'])
-            embeddings = raw_paper['embedding']['vector']
+            embeddings_dict = raw_paper.get('embedding')
+            if embeddings_dict is None:
+                continue
+            else:
+                embeddings = raw_paper['embedding']['vector']
             result = {
                 "paper_id": paper_id,
                 "title": title,
@@ -224,8 +230,6 @@ class References:
         for key, counts in keywords_dict.items():
             self.papers[key] = _collect_papers_ss(key, counts, tldr)
 
-        # Remove duplicated references # todo: remove duplicated references in tex_processing procedure.
-
     def find_relevant(self, max_refs=30):
         # todo: use embeddings to evaluate
         pass
@@ -242,7 +246,12 @@ class References:
 
         bibtex_entries = []
         paper_ids = []
+        seen = set()
         for paper in papers:
+            if paper["paper_id"] in seen:
+                continue
+            else:
+                seen.add(paper["paper_id"])
             bibtex_entry = f"""@article{{{paper["paper_id"]},
           title = {{{paper["title"]}}},
           author = {{{paper["authors"]}}}, 
@@ -287,49 +296,40 @@ class References:
 
 
 if __name__ == "__main__":
-    # r = ss_search("Deep Q-Networks")['data']
-    # print(r)
-    # papers_json = {}
-    # # for i in range(len(r)):
-    # #     r[i]
-    # #
-    # # with open("Output.txt", "w") as text_file:
-    # #     text_file.write("Purchase Amount: %s" % TotalAmount)
-    # embeddings = r[0]['embedding']['vector']
-    # print(embeddings)
+    # testing search results
+    r = ss_search("Deep Q-Networks", limit=1)  # a list of raw papers
+    if r['total'] > 0:
+        paper = r['data'][0]
+        # print(paper)
 
+    # resting References
     refs = References()
-    keywords_dict = {
-        "Deep Q-Networks": 5,
-        "Actor-Critic Algorithms": 4,
-        "Exploration-Exploitation Trade-off": 3
-    }
-    refs.collect_papers(keywords_dict, method="ss", tldr=True)
-    for k in refs.papers:
-        papers = refs.papers[k]
-        print("keyword: ", k)
-        for paper in papers:
-            print(paper["paper_id"])
-
-    refs.to_json()
-    refs.to_bibtex()
-    refs.to_prompts()
-    # print(refs.papers)
-
-    # todo: test load_papers
-    # write test covering `references.py`. / fix this as a stable version
-
-    # for p in refs.papers:
-    #     print(p["paper_id"])
-    # print(len(refs.papers))
+    # keywords_dict = {
+    #     "Deep Q-Networks": 5,
+    #     "Actor-Critic Algorithms": 4,
+    #     "Exploration-Exploitation Trade-off": 3
+    # }
+    # refs.collect_papers(keywords_dict, tldr=True)
+    # for k in refs.papers:
+    #     papers = refs.papers[k] # for each keyword, there is a list of papers
+    #     print("keyword: ", k)
+    #     for paper in papers:
+    #         print(paper["paper_id"])
     #
-    # papers_json = refs.to_json()
-    # # print(papers_json)
+    # refs.to_bibtex()
+    # papers_json = refs.to_json() # this json can be used to find the most relevant papers
     # with open("papers.json", "w",  encoding='utf-8') as text_file:
     #     text_file.write(f"{papers_json}")
+    #
+    # prompts = refs.to_prompts()
+    # print(prompts)
 
+    bib = "test.bib"
+    refs.load_papers(bib, "variance-reduction rl")
+    print(refs.papers)
 
-    # bib = "D:\\Projects\\auto-draft\\latex_templates\\pre_refs.bib"
-    # papers = load_papers_from_bibtex(bib)
+    prompts = refs.to_prompts()
+    for k in prompts:
+        print(f"{k}: {prompts[k]}\n")
     # for paper in papers:
     #     print(paper)
