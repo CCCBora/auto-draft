@@ -16,6 +16,7 @@ from utils.file_operations import hash_name
 #   8. Re-build some components using `langchain`
 #           - in `references.py`, use PromptTemplates.format -> str
 #           - in `gpt_interation`, use LLM
+#   5. 从提供的bib文件中 找到cite和citedby的文章, 计算embeddings; 从整个paper list中 根据cos距离进行排序; 选取max_refs的文章
 # future:
 #   4. add auto_polishing function
 #   12. Change link to more appealing color # after the website is built;
@@ -104,7 +105,7 @@ with gr.Blocks(theme=theme) as demo:
     
     ***2023-05-03 Update***: 在公开版本中为大家提供了输入OpenAI API Key的地址, 如果有GPT-4的API KEY的话可以在这里体验! 
     
-    在这个Huggingface Organization里也提供一定额度的免费体验： [AUTO-ACADEMIC](https://huggingface.co/organizations/auto-academic/share/HPjgazDSlkwLNCWKiAiZoYtXaJIatkWDYM).
+    在这个Huggingface Organization里也提供一定额度的免费体验： [AUTO-ACADEMIC](https://huggingface.co/auto-academic).
     
     如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.  
     

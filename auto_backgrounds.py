@@ -1,5 +1,5 @@
 import os.path
-
+import json
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
@@ -25,16 +25,14 @@ def log_usage(usage, generating_target, print_out=True):
     TOTAL_COMPLETION_TOKENS += completion_tokens
 
     message = f"For generating {generating_target}, {total_tokens} tokens have been used ({prompts_tokens} for prompts; {completion_tokens} for completion). " \
-              f"{TOTAL_TOKENS} tokens have been used in total."
+              f"{TOTAL_TOKENS} tokens have been used in total.\n\n"
     if print_out:
         print(message)
     logging.info(message)
 
 def _generation_setup(title, description="", template="ICLR2022", model="gpt-4",
-                      search_engine="ss", tldr=False, max_kw_refs=10):
-    '''
-    todo: use `model` to control which model to use; may use another method to generate keywords or collect references
-    '''
+                      tldr=False, max_kw_refs=4, max_num_refs=10):
+    print("Generation setup...")
     paper = {}
     paper_body = {}
 
@@ -45,13 +43,25 @@ def _generation_setup(title, description="", template="ICLR2022", model="gpt-4",
     # Generate keywords and references
     print("Initialize the paper information ...")
     input_dict = {"title": title, "description": description}
-    keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo", max_kw_refs=max_kw_refs)
+    # keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo", max_kw_refs=max_kw_refs)
+    keywords, usage = keywords_generation(input_dict) #todo: handle format error here
     print(f"keywords: {keywords}")
     log_usage(usage, "keywords")
 
-    ref = References(load_papers="")
-    ref.collect_papers(keywords, method=search_engine, tldr=tldr)
-    all_paper_ids = ref.to_bibtex(bibtex_path)  # todo: this will used to check if all citations are in this list
+    # generate keywords dictionary
+    keywords = {keyword:max_kw_refs for keyword in keywords}
+    # tmp = {}
+    # for keyword in json.loads(keywords):
+    #     tmp[keyword] = max_kw_refs
+    # keywords = tmp
+    print(f"keywords: {keywords}")
+
+    ref = References()
+    ref.collect_papers(keywords, tldr=tldr)
+    # todo: use `all_paper_ids` to check if all citations are in this list
+    #       in tex_processing, remove all duplicated ids
+    #       find most relevant papers; max_num_refs
+    all_paper_ids = ref.to_bibtex(bibtex_path)
 
     print(f"The paper information has been initialized. References are saved to {bibtex_path}.")
 
@@ -91,37 +101,29 @@ def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
     return make_archive("sample-output.pdf", filename)
 
 
-def generate_draft(title, description="", template="ICLR2022", model="gpt-4", search_engine="ss", tldr=True, max_kw_refs=10):
-    paper, destination_folder, _ = _generation_setup(title, description, template, model, search_engine, tldr, max_kw_refs)
-
+def generate_draft(title, description="", template="ICLR2022", model="gpt-4", tldr=True, max_kw_refs=4):
+    paper, destination_folder, _ = _generation_setup(title, description, template, model, tldr, max_kw_refs)
+    raise
     # todo: `list_of_methods` failed to be generated; find a solution ...
     # print("Generating figures ...")
     # usage = figures_generation(paper, destination_folder, model="gpt-3.5-turbo")
     # log_usage(usage, "figures")
 
     # for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
-    for section in ["introduction", "related works", "backgrounds", "abstract"]:
-        try:
-            usage = section_generation(paper, section, destination_folder, model=model)
-            log_usage(usage, section)
-        except Exception as e:
-            message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
-            print(message)
-            logging.info(message)
-            max_attempts = 2
-            # todo: make this part more compact
-            # re-try `max_attempts` time
-            for i in range(max_attempts):
+    for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
+        max_attempts = 4
+        attempts_count = 0
+        while attempts_count < max_attempts:
+            try:
+                usage = section_generation(paper, section, destination_folder, model=model)
+                log_usage(usage, section)
+                break
+            except Exception as e:
+                message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
+                print(message)
+                logging.info(message)
+                attempts_count += 1
                 time.sleep(20)
-                try:
-                    usage = section_generation(paper, section, destination_folder, model=model)
-                    log_usage(usage, section)
-                    e = None
-                except Exception as e:
-                    pass
-                if e is None:
-                    break
-
 
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
@@ -129,7 +131,10 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4", se
 
 
 if __name__ == "__main__":
+    import openai
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+
     title = "Using interpretable boosting algorithms for modeling environmental and agricultural data"
     description = ""
-    output = generate_draft(title, description, search_engine="ss", tldr=True, max_kw_refs=10)
+    output = generate_draft(title, description, tldr=True, max_kw_refs=10)
     print(output)
