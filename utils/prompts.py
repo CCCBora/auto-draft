@@ -33,16 +33,15 @@ def generate_experiments_prompts(paper_info):
 ######################################################################################################################
 
 # two parameters: min_refs_num, max_refs_num
-keywords_system_template = """You are an assistant designed to provide accurate and informative keywords of searching academic papers.
-Instructions
-- Your response should always be a Python list; e.g. ["keyword1", "keyword2", "keyword3"]
-- The length of list should between {min_refs_num} and {max_refs_num}
-- Use specific phrases as keywords and avoid using too general words (e.g. machine learning)"""
-# keywords_system_template = """You are an assistant designed to provide related research fields of academic papers.
-# Instructions:
-# - Your response should follow the following output format: ["field1", "field2", "field3"]\n
-# - The length of this Python list should between {min_refs_num} and {max_refs_num}\n
-# - Use specific phrases instead of using too general words (e.g. machine learning)"""
+# keywords_system_template = """You are an assistant designed to provide accurate and informative keywords of searching academic papers.
+# Instructions
+# - Your response should always be a Python list; e.g. ["keyword1", "keyword2", "keyword3"]
+# - The length of list should between {min_refs_num} and {max_refs_num}
+# - Use specific phrases as keywords and avoid using too general words (e.g. machine learning)"""
+keywords_system_template = """You are an assistant designed to provide accurate and informative keywords of searching academic papers.\n
+Instructions:\n
+- Your response should follow the following output format: ["field1", "field2", "field3", "field4"]\n
+- The length of this Python list should between {min_refs_num} and {max_refs_num}."""
 
 # two parameters: min_refs_num, max_refs_num
 exp_methods_system_template = """You are an assistant designed to provide most related algorithms or methods to a given paper title.

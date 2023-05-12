@@ -30,8 +30,29 @@ def log_usage(usage, generating_target, print_out=True):
         print(message)
     logging.info(message)
 
-def _generation_setup(title, description="", template="ICLR2022", model="gpt-4",
-                      tldr=False, max_kw_refs=4, max_num_refs=10):
+def _generation_setup(title, description="", template="ICLR2022", tldr=False,
+                      max_kw_refs=10, max_num_refs=50, bib_refs=None):
+    """
+    This function handles the setup process for paper generation; it contains three folds
+        1. Copy the template to the outputs folder. Create the log file `generation.log`
+        2. Collect references based on the given `title` and `description`
+        3. Generate the basic `paper` object (a dictionary)
+
+    Parameters:
+        title (str): The title of the paper.
+        description (str, optional): A short description or abstract for the paper. Defaults to an empty string.
+        template (str, optional): The template to be used for paper generation. Defaults to "ICLR2022".
+        tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be generated for the collected papers. Defaults to False.
+        max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword. Defaults to 10.
+        max_num_refs (int, optional): The maximum number of references that can be included in the paper. Defaults to 50.
+        bib_refs (list, optional): A list of pre-existing references in BibTeX format. Defaults to None.
+
+    Returns:
+    tuple: A tuple containing the following elements:
+        - paper (dict): A dictionary containing the generated paper information.
+        - destination_folder (str): The path to the destination folder where the generation log is saved.
+        - all_paper_ids (list): A list of all paper IDs collected for the references.
+    """
     print("Generation setup...")
     paper = {}
     paper_body = {}
@@ -44,24 +65,16 @@ def _generation_setup(title, description="", template="ICLR2022", model="gpt-4",
     print("Initialize the paper information ...")
     input_dict = {"title": title, "description": description}
     # keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo", max_kw_refs=max_kw_refs)
-    keywords, usage = keywords_generation(input_dict) #todo: handle format error here
-    print(f"keywords: {keywords}")
+    keywords, usage = keywords_generation(input_dict)
     log_usage(usage, "keywords")
 
     # generate keywords dictionary
     keywords = {keyword:max_kw_refs for keyword in keywords}
-    # tmp = {}
-    # for keyword in json.loads(keywords):
-    #     tmp[keyword] = max_kw_refs
-    # keywords = tmp
-    print(f"keywords: {keywords}")
+    print(f"keywords: {keywords}\n\n")
 
-    ref = References()
+    ref = References(title, bib_refs)
     ref.collect_papers(keywords, tldr=tldr)
-    # todo: use `all_paper_ids` to check if all citations are in this list
-    #       in tex_processing, remove all duplicated ids
-    #       find most relevant papers; max_num_refs
-    all_paper_ids = ref.to_bibtex(bibtex_path)
+    all_paper_ids = ref.to_bibtex(bibtex_path, max_num_refs) #todo: max_num_refs has not implemented yet
 
     print(f"The paper information has been initialized. References are saved to {bibtex_path}.")
 
@@ -70,11 +83,12 @@ def _generation_setup(title, description="", template="ICLR2022", model="gpt-4",
     paper["references"] = ref.to_prompts()
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
-    return paper, destination_folder, all_paper_ids
+    return paper, destination_folder, all_paper_ids #todo: use `all_paper_ids` to check if all citations are in this list
 
 
 
 def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
+    # todo: to match the current generation setup
     paper, destination_folder, _ = _generation_setup(title, description, template, model)
 
     for section in ["introduction", "related works", "backgrounds"]:
@@ -92,25 +106,15 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
     return make_archive(destination_folder, filename)
 
 
-def fake_generator(title, description="", template="ICLR2022", model="gpt-4"):
-    """
-    This function is used to test the whole pipeline without calling OpenAI API.
-    """
-    input_dict = {"title": title, "description": description, "generator": "generate_draft"}
-    filename = hash_name(input_dict) + ".zip"
-    return make_archive("sample-output.pdf", filename)
+def generate_draft(title, description="", template="ICLR2022",
+                   model="gpt-4", tldr=True, max_kw_refs=10, max_num_refs=30, sections=None, bib_refs=None):
+    # pre-processing `sections` parameter;
+    if sections is None:
+        sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]
 
-
-def generate_draft(title, description="", template="ICLR2022", model="gpt-4", tldr=True, max_kw_refs=4):
-    paper, destination_folder, _ = _generation_setup(title, description, template, model, tldr, max_kw_refs)
-    raise
-    # todo: `list_of_methods` failed to be generated; find a solution ...
-    # print("Generating figures ...")
-    # usage = figures_generation(paper, destination_folder, model="gpt-3.5-turbo")
-    # log_usage(usage, "figures")
-
-    # for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
-    for section in ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]:
+    # todo: add more parameters; select which section to generate; select maximum refs.
+    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, max_num_refs, bib_refs)
+    for section in sections:
         max_attempts = 4
         attempts_count = 0
         while attempts_count < max_attempts:
@@ -127,6 +131,7 @@ def generate_draft(title, description="", template="ICLR2022", model="gpt-4", tl
 
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
+    print("\nMission completed.\n")
     return make_archive(destination_folder, filename)
 
 
