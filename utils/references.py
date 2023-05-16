@@ -21,6 +21,7 @@
 import requests
 import re
 import bibtexparser
+import random
 from scholarly import scholarly
 from scholarly import ProxyGenerator
 
@@ -239,6 +240,8 @@ class References:
         #   use embeddings to evaluate; keep top k relevant references in papers
         #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
         papers = self._get_papers(keyword = "_all")
+        random.shuffle(papers)
+        papers = papers[:max_num_refs]
 
         # clear the bibtex file
         with open(path_to_bibtex, "w", encoding="utf-8") as file:
