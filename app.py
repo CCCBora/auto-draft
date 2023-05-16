@@ -21,6 +21,9 @@ from utils.file_operations import hash_name
 #   1. Check if there are any duplicated citations
 #   2. Remove potential thebibliography and bibitem in .tex file
 
+#######################################################################################################################
+# Check if openai and cloud storage available
+#######################################################################################################################
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -42,17 +45,19 @@ else:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
 
-def clear_inputs(text1, text2):
+def clear_inputs(*args):
     return "", ""
 
 
 def wrapped_generator(paper_title, paper_description, openai_api_key=None,
-                      template="ICLR2022", tldr=True, max_num_refs=50, sections=None, bib_refs=None, model="gpt-4",
+                      paper_template="ICLR2022", tldr=True, max_num_refs=50, selected_sections=None, bib_refs=None, model="gpt-4",
                       cache_mode=IS_CACHE_AVAILABLE):
     # if `cache_mode` is True, then follow the following steps:
     #        check if "title"+"description" have been generated before
     #        if so, download from the cloud storage, return it
     #        if not, generate the result.
+    if bib_refs is not None:
+        bib_refs = bib_refs.name
     if openai_api_key is not None:
         openai.api_key = openai_api_key
         openai.Model.list()
@@ -60,9 +65,8 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
     if cache_mode:
         from utils.storage import list_all_files, download_file, upload_file
         # check if "title"+"description" have been generated before
-
         input_dict = {"title": paper_title, "description": paper_description,
-                      "generator": "generate_draft"}  # todo: modify here also
+                      "generator": "generate_draft"}
         file_name = hash_name(input_dict) + ".zip"
         file_list = list_all_files()
         # print(f"{file_name} will be generated. Check the file list {file_list}")
@@ -73,17 +77,17 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
         else:
             # generate the result.
             # output = fake_generate_backgrounds(title, description, openai_key)
-            output =generate_draft(paper_title, paper_description, template=template,
-                                   tldr=tldr, max_num_refs=max_num_refs,
-                                   sections=sections, bib_refs=bib_refs, model=model)
+            output = generate_draft(paper_title, paper_description, template=paper_template,
+                                    tldr=tldr, max_num_refs=max_num_refs,
+                                    sections=selected_sections, bib_refs=bib_refs, model=model)
             # output = generate_draft(paper_title, paper_description, template, "gpt-4")
             upload_file(output)
             return output
     else:
         # output = fake_generate_backgrounds(title, description, openai_key)
-        output =generate_draft(paper_title, paper_description, template=template,
-                               tldr=tldr, max_num_refs=max_num_refs,
-                               sections=sections, bib_refs=bib_refs, model=model)
+        output = generate_draft(paper_title, paper_description, template=paper_template,
+                                tldr=tldr, max_num_refs=max_num_refs,
+                                sections=selected_sections, bib_refs=bib_refs, model=model)
         return output
 
 
@@ -101,12 +105,12 @@ ACADEMIC_PAPER = """## 一键生成论文初稿
 3. 在右侧下载.zip格式的输出，在Overleaf上编译浏览.  
 """
 
-
 with gr.Blocks(theme=theme) as demo:
     gr.Markdown('''
     # Auto-Draft: 文献整理辅助工具
     
-    本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试。通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
+    本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
+    通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
     
     ***2023-05-03 Update***: 在公开版本中为大家提供了输入OpenAI API Key的地址, 如果有GPT-4的API KEY的话可以在这里体验! 
     
@@ -127,7 +131,6 @@ with gr.Blocks(theme=theme) as demo:
             with gr.Tab("学术论文"):
                 gr.Markdown(ACADEMIC_PAPER)
 
-
                 title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
                                    label="Title", info="论文标题")
 
@@ -139,34 +142,37 @@ with gr.Blocks(theme=theme) as demo:
                         with gr.Column():
                             with gr.Row():
                                 template = gr.Dropdown(label="Template", choices=["ICLR2022"], value="ICLR2022",
-                                                            interactive=False,
-                                                            info="生成论文的参考模板. (暂不支持修改)")
-                                model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"], value="gpt-4",
-                                                            interactive=True,
-                                                            info="生成论文用到的语言模型.")
+                                                       interactive=False,
+                                                       info="生成论文的参考模板. (暂不支持修改)")
+                                model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
+                                                              value="gpt-4",
+                                                              interactive=True,
+                                                              info="生成论文用到的语言模型.")
                             gr.Markdown('''
                             上传.bib文件提供AI需要参考的文献. 
                             ''')
                             bibtex_file = gr.File(label="Upload .bib file", file_types=["text"],
                                                   interactive=True)
                             gr.Examples(
-                                examples=["latex_templates/pre_refs.bib"],
+                                examples=["latex_templates/example_references.bib"],
                                 inputs=bibtex_file
                             )
                         with gr.Column():
                             search_engine = gr.Dropdown(label="Search Engine",
                                                         choices=["ArXiv", "Semantic Scholar", "Google Scholar", "None"],
-                                                        value= "Semantic Scholar",
+                                                        value="Semantic Scholar",
                                                         interactive=False,
                                                         info="用于决定GPT-4用什么搜索引擎来搜索文献. (暂不支持修改)")
                             tldr_checkbox = gr.Checkbox(value=True, label="TLDR;",
-                                               info="选择此筐表示将使用Semantic Scholar的TLDR作为文献的总结.",
-                                               interactive = True)
-                            sections = gr.CheckboxGroup(choices=["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"],
-                                                        type="value", label="生成章节", interactive = True,
-                                                        value=["introduction", "related works"])
+                                                        info="选择此筐表示将使用Semantic Scholar的TLDR作为文献的总结.",
+                                                        interactive=True)
+                            sections = gr.CheckboxGroup(
+                                choices=["introduction", "related works", "backgrounds", "methodology", "experiments",
+                                         "conclusion", "abstract"],
+                                type="value", label="生成章节", interactive=True,
+                                value=["introduction", "related works"])
                             slider = gr.Slider(minimum=1, maximum=100, value=50, step=1,
-                                               interactive = True, label="最大参考文献数目")
+                                               interactive=True, label="最大参考文献数目")
 
                 with gr.Row():
                     clear_button_pp = gr.Button("Clear")
@@ -205,8 +211,11 @@ with gr.Blocks(theme=theme) as demo:
             file_output = gr.File(label="Output")
 
     clear_button_pp.click(fn=clear_inputs, inputs=[title, description_pp], outputs=[title, description_pp])
-    # submit_button_pp.click(fn=wrapped_generator, inputs=[title, description_pp, key, template, tldr, slider, sections, bibtex_file], outputs=file_output)
-    submit_button_pp.click(fn=wrapped_generator, inputs=[title, description_pp, key, template, tldr_checkbox, slider, sections, bibtex_file, model_selection ], outputs=file_output)
+    # submit_button_pp.click(fn=wrapped_generator,
+    # inputs=[title, description_pp, key, template, tldr, slider, sections, bibtex_file], outputs=file_output)
+    submit_button_pp.click(fn=wrapped_generator,
+                           inputs=[title, description_pp, key, template, tldr_checkbox, slider, sections, bibtex_file,
+                                   model_selection], outputs=file_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch()
