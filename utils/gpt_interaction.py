@@ -76,6 +76,22 @@ def get_responses(user_message, model="gpt-4", temperature=0.4, openai_key=None)
     log.info(assistant_message)
     return assistant_message, usage
 
+def get_gpt_responses(systems, prompts, model="gpt-4", temperature=0.4):
+    conversation_history = [
+        {"role": "system", "content": systems},
+        {"role": "user", "content": prompts}
+    ]
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=conversation_history,
+        n=1,  # Number of responses you want to generate
+        temperature=temperature,  # Controls the creativity of the generated response
+    )
+    assistant_message = response['choices'][0]["message"]["content"]
+    usage = response['usage']
+    log.info(assistant_message)
+    return assistant_message, usage
+
 
 if __name__ == "__main__":
     test_strings = [r"f.write(r'hello world')", r"f.write(r'''hello world''')", r"f.write(r'''hello world",

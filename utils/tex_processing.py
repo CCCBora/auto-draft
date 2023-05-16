@@ -19,10 +19,11 @@ def replace_title(save_to_path, title):
 
 # check if citations are in bibtex.
 
-
 # replace citations
 
 # sometimes the output may include thebibliography and bibitem . remove all of it.
+
+# return all .png and replace it using placeholder.
 
 
 
