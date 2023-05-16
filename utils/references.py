@@ -42,10 +42,13 @@ def search_paper_abstract(title):
     pg = ProxyGenerator()
     success = pg.FreeProxies() #pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155")
     if success:
-        scholarly.use_proxy(pg)
-        # input the title of a paper, return its abstract
-        search_query = scholarly.search_pubs(title)
-        found_paper = next(search_query)
+        try:
+            scholarly.use_proxy(pg)
+            # input the title of a paper, return its abstract
+            search_query = scholarly.search_pubs(title)
+            found_paper = next(search_query)
+        except:
+            return ""
     else:
         return ""
         # raise RuntimeError("ScraperAPI fails.")
