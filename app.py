@@ -115,8 +115,6 @@ with gr.Blocks(theme=theme) as demo:
     ***2023-05-17 Update***: 我的API的余额用完了, 所以这个月不再能提供GPT-4的API Key. 这里为大家提供了一个位置输入OpenAI API Key. 同时也提供了GPT-3.5的兼容. 欢迎大家自行体验. 
     
     如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.
-    
-    请注意不要在`Cache`显示AVAILABLE的时候输入你的Key, 因为会被上传到我的云储存里.  
     ''')
 
     with gr.Row():
