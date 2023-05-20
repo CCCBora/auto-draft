@@ -2,6 +2,7 @@ import os.path
 import json
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
+from utils.tex_processing import create_copies
 from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
 import logging
 import time
@@ -128,7 +129,8 @@ def generate_draft(title, description="", template="ICLR2022",
                 logging.info(message)
                 attempts_count += 1
                 time.sleep(20)
-
+    # post-processing
+    create_copies(destination_folder)
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
     print("\nMission completed.\n")
