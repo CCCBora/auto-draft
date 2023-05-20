@@ -116,11 +116,15 @@ def generate_paper_prompts(paper_info, section):
     # ref_instruction_subprompt - give AI references
     # self_subprompt - give AI existing written parts
     # output_subprompt - tell AI how to output
-    fundamental_subprompt = "Your task is to write the {section} section of the machine learning paper with the title '{title}'. {description}\n"
+    fundamental_subprompt = "Your task is to write the {section} section of the paper with the title '{title}'. {description}\n"
     instruction_subprompt = "\n" \
                             "Your response should follow the following instructions:\n" \
                             "{instruction}\n" \
                             "- Start with \section{{{section}}}\n"
+
+    abstract_instruction_subprompt = "\n" \
+                            "Your response should follow the following instructions:\n" \
+                            "{instruction}\n"
     ref_instruction_subprompt = "- Read references. " \
                                 "Every time you use information from the references, you need to appropriately cite it (using \citep or \citet)." \
                                 "For example of \citep, the sentence where you use information from lei2022adaptive \citep{{lei2022adaptive}}. " \
@@ -141,7 +145,7 @@ def generate_paper_prompts(paper_info, section):
         template=fundamental_subprompt + instruction_subprompt + self_subprompt + output_subprompt)
     abstract_prompts = PromptTemplate(
         input_variables=["title", "description", "instruction", "section", "paper"],
-        template=fundamental_subprompt + instruction_subprompt + self_subprompt + abstract_output_subprompt)
+        template=fundamental_subprompt + abstract_instruction_subprompt + self_subprompt + abstract_output_subprompt)
 
     if section in ["introduction", "related works", "backgrounds"]:
         # title + references + instruction

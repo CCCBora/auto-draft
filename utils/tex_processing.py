@@ -1,4 +1,6 @@
 import os
+import re
+import shutil
 
 def replace_title(save_to_path, title):
     # Define input and output file names
@@ -24,6 +26,47 @@ def replace_title(save_to_path, title):
 # sometimes the output may include thebibliography and bibitem . remove all of it.
 
 # return all .png and replace it using placeholder.
+
+def find_tex_files(directory_path):
+    tex_files = []
+
+    for filename in os.listdir(directory_path):
+        if filename.endswith(".tex"):
+            tex_files.append(filename)
+
+    return tex_files
+
+def find_figure_names(tex_file_path):
+    # Regular expression pattern to find \includegraphics commands
+    pattern = r'\\includegraphics.*?{(.*?)}'
+    with open(tex_file_path, 'r') as file:
+        content = file.read()
+    # Find all matches in the file content
+    matches = re.findall(pattern, content)
+    # Matches will be a list of figure names
+    return matches
+
+def create_copies(output_dir):
+    tex_files = find_tex_files(output_dir)
+    for tex_file in tex_files:
+        path =  os.path.join(output_dir, tex_file)
+        all_figs = find_figure_names(path)
+        for fig in all_figs:
+            original_fig = os.path.join(output_dir, "fig.png")
+            target_fig = os.path.join(output_dir, fig)
+            shutil.copy2(original_fig, target_fig)
+
+
+
+
+
+
+if __name__ == "__main__":
+    auto_draft = os.path.dirname(os.getcwd())
+    directory_path = "outputs/outputs_20230520_110413/"
+    path = os.path.join(auto_draft, directory_path)
+
+    create_copies(path)
 
 
 
