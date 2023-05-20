@@ -143,7 +143,7 @@ with gr.Blocks(theme=theme) as demo:
                                                        interactive=False,
                                                        info="生成论文的参考模板. (暂不支持修改)")
                                 model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
-                                                              value="gpt-4",
+                                                              value="gpt-3.5-turbo",
                                                               interactive=True,
                                                               info="生成论文用到的语言模型.")
                             gr.Markdown('''
@@ -169,7 +169,7 @@ with gr.Blocks(theme=theme) as demo:
                                          "conclusion", "abstract"],
                                 type="value", label="生成章节", interactive=True,
                                 value=["introduction", "related works"])
-                            slider = gr.Slider(minimum=1, maximum=100, value=50, step=1,
+                            slider = gr.Slider(minimum=1, maximum=100, value=20, step=1,
                                                interactive=True, label="最大参考文献数目")
 
                 with gr.Row():
