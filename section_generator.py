@@ -94,7 +94,7 @@ def keywords_generation(input_dict):
                                      model="gpt-3.5-turbo", temperature=0.4)
             print(keywords)
             output = json.loads(keywords)
-            return output, usage
+            return output.keys(), usage
         except json.decoder.JSONDecodeError:
             attempts_count += 1
             time.sleep(20)
