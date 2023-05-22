@@ -3,6 +3,7 @@ import os
 import openai
 from auto_backgrounds import generate_backgrounds, generate_draft
 from utils.file_operations import hash_name
+from references_generator import generate_top_k_references
 
 # note: App白屏bug：允许第三方cookie
 # todo:
@@ -48,6 +49,9 @@ else:
 def clear_inputs(*args):
     return "", ""
 
+def clear_inputs_refs(*args):
+    return "", 5
+
 
 def wrapped_generator(paper_title, paper_description, openai_api_key=None,
                       paper_template="ICLR2022", tldr=True, max_num_refs=50, selected_sections=None, bib_refs=None, model="gpt-4",
@@ -91,6 +95,11 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
         return output
 
 
+def wrapped_references_generator(paper_title, num_refs):
+    return generate_top_k_references(paper_title, top_k=num_refs)
+
+
+
 theme = gr.themes.Default(font=gr.themes.GoogleFont("Questrial"))
 # .set(
 #     background_fill_primary='#E5E4E2',
@@ -103,6 +112,14 @@ ACADEMIC_PAPER = """## 一键生成论文初稿
 1. 在Title文本框中输入想要生成的论文名称（比如Playing Atari with Deep Reinforcement Learning). 
 2. 点击Submit. 等待大概十分钟. 
 3. 在右侧下载.zip格式的输出，在Overleaf上编译浏览.  
+"""
+
+
+REFERENCES = """## 一键搜索相关论文
+
+1. 在Title文本框中输入想要搜索文献的论文（比如Playing Atari with Deep Reinforcement Learning). 
+2. 点击Submit. 等待大概十分钟. 
+3. 在右侧JSON处会显示相关文献.  
 """
 
 with gr.Blocks(theme=theme) as demo:
@@ -176,23 +193,22 @@ with gr.Blocks(theme=theme) as demo:
                     clear_button_pp = gr.Button("Clear")
                     submit_button_pp = gr.Button("Submit", variant="primary")
 
-            with gr.Tab("文献综述"):
+            with gr.Tab("文献搜索 (NEW!)"):
+                gr.Markdown(REFERENCES)
+
+                title_refs = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
+                                   label="Title", info="论文标题")
+                slider_refs = gr.Slider(minimum=1, maximum=100, value=5, step=1,
+                                   interactive=True, label="最相关的参考文献数目")
+                with gr.Row():
+                    clear_button_refs = gr.Button("Clear")
+                    submit_button_refs = gr.Button("Submit", variant="primary")
+
+            with gr.Tab("文献综述 (Coming soon!)"):
                 gr.Markdown('''
                 <h1  style="text-align: center;">Coming soon!</h1>
                 ''')
-                # topic = gr.Textbox(value="Deep Reinforcement Learning", lines=1, max_lines=1,
-                #                    label="Topic", info="文献主题")
-                # with gr.Accordion("Advanced Setting"):
-                #     description_lr = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
-                #                              info="对希望生成的综述的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
-                # with gr.Row():
-                #     clear_button_lr = gr.Button("Clear")
-                #     submit_button_lr = gr.Button("Submit", variant="primary")
-            with gr.Tab("论文润色"):
-                gr.Markdown('''
-                <h1  style="text-align: center;">Coming soon!</h1>
-                ''')
-            with gr.Tab("帮我想想该写什么论文!"):
+            with gr.Tab("Github文档 (Coming soon!)"):
                 gr.Markdown('''
                 <h1  style="text-align: center;">Coming soon!</h1>
                 ''')
@@ -207,13 +223,16 @@ with gr.Blocks(theme=theme) as demo:
              当`Cache`显示AVAILABLE的时候, 所有的输入和输出会被备份到我的云储存中. 显示NOT AVAILABLE的时候不影响实际使用. 
             `OpenAI API`: <span style="{style_mapping[IS_OPENAI_API_KEY_AVAILABLE]}">{availability_mapping[IS_OPENAI_API_KEY_AVAILABLE]}</span>.  `Cache`: <span style="{style_mapping[IS_CACHE_AVAILABLE]}">{availability_mapping[IS_CACHE_AVAILABLE]}</span>.''')
             file_output = gr.File(label="Output")
+            json_output = gr.JSON(label="References")
 
     clear_button_pp.click(fn=clear_inputs, inputs=[title, description_pp], outputs=[title, description_pp])
-    # submit_button_pp.click(fn=wrapped_generator,
-    # inputs=[title, description_pp, key, template, tldr, slider, sections, bibtex_file], outputs=file_output)
     submit_button_pp.click(fn=wrapped_generator,
                            inputs=[title, description_pp, key, template, tldr_checkbox, slider, sections, bibtex_file,
                                    model_selection], outputs=file_output)
+
+    clear_button_refs.click(fn=clear_inputs_refs, inputs=[title_refs, slider_refs], outputs=[title_refs, slider_refs])
+    submit_button_refs.click(fn=wrapped_references_generator,
+                           inputs=[title_refs, slider_refs], outputs=json_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch()

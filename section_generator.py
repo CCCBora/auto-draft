@@ -90,7 +90,7 @@ def keywords_generation(input_dict):
     attempts_count = 0
     while attempts_count < max_attempts:
         try:
-            keywords, usage= get_gpt_responses(KEYWORDS_SYSTEM.format(min_refs_num=3, max_refs_num=5), title,
+            keywords, usage= get_gpt_responses(KEYWORDS_SYSTEM.format(min_refs_num=1, max_refs_num=10), title,
                                      model="gpt-3.5-turbo", temperature=0.4)
             print(keywords)
             output = json.loads(keywords)
