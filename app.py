@@ -95,7 +95,10 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
         return output
 
 
-def wrapped_references_generator(paper_title, num_refs):
+def wrapped_references_generator(paper_title, num_refs, openai_api_key=None):
+    if openai_api_key is not None:
+        openai.api_key = openai_api_key
+        openai.Model.list()
     return generate_top_k_references(paper_title, top_k=num_refs)
 
 
@@ -232,7 +235,7 @@ with gr.Blocks(theme=theme) as demo:
 
     clear_button_refs.click(fn=clear_inputs_refs, inputs=[title_refs, slider_refs], outputs=[title_refs, slider_refs])
     submit_button_refs.click(fn=wrapped_references_generator,
-                           inputs=[title_refs, slider_refs], outputs=json_output)
+                           inputs=[title_refs, slider_refs, key], outputs=json_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch()
