@@ -4,6 +4,7 @@ from langchain import PromptTemplate
 
 log = logging.getLogger(__name__)
 
+# todo: load prompts from configurations
 
 ######################################################################################################################
 # Some basic functions
@@ -33,15 +34,13 @@ def generate_experiments_prompts(paper_info):
 ######################################################################################################################
 
 # two parameters: min_refs_num, max_refs_num
-# keywords_system_template = """You are an assistant designed to provide accurate and informative keywords of searching academic papers.
-# Instructions
-# - Your response should always be a Python list; e.g. ["keyword1", "keyword2", "keyword3"]
-# - The length of list should between {min_refs_num} and {max_refs_num}
-# - Use specific phrases as keywords and avoid using too general words (e.g. machine learning)"""
-keywords_system_template = """You are an assistant designed to provide accurate and informative keywords of searching academic papers.\n
+keywords_system_template = """You are an assistant designed to provide accurate and informative keywords of searching academic papers. 
+The user will input the tile of a paper. You need to return three to five most related fields. \n
 Instructions:\n
-- Your response should follow the following output format: ["field1", "field2", "field3", "field4"]\n
-- The length of this Python list should between {min_refs_num} and {max_refs_num}."""
+- Assign numbers to each field to present the importance. The larger, the more important. \n
+- {max_refs_num} is the most important and {min_refs_num} is the least important. \n
+- Your response should follow the following format: {{"field1": 5, "field2": 7, "field3": 8, "field4": 5}}\n 
+- Ensure the response can be parsed by Python json.loads"""
 
 # two parameters: min_refs_num, max_refs_num
 exp_methods_system_template = """You are an assistant designed to provide most related algorithms or methods to a given paper title.
