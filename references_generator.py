@@ -5,8 +5,10 @@ from section_generator import section_generation_bg, keywords_generation, figure
 import itertools
 from gradio_client import Client
 
+
 def generate_raw_references(title, description="",
-                            bib_refs=None, tldr=False, max_kw_refs=10,  save_to="ref.bib"):
+                            bib_refs=None, tldr=False, max_kw_refs=10,
+                            save_to="ref.bib"):
     # load pre-provided references
     ref = References(title, bib_refs)
 
@@ -21,16 +23,17 @@ def generate_raw_references(title, description="",
     print(f"keywords: {keywords}\n\n")
 
     ref.collect_papers(keywords, tldr=tldr)
-    paper_json = ref.to_json()
+    # paper_json = ref.to_json()
 
     with open(save_to, "w") as f:
         json.dump(paper_json, f)
 
-    return save_to, paper_json
+    return save_to, ref # paper_json
 
 def generate_top_k_references(title, description="",
                             bib_refs=None, tldr=False, max_kw_refs=10,  save_to="ref.bib", top_k=5):
-    json_path, json_content = generate_raw_references(title, description, bib_refs, tldr, max_kw_refs,  save_to)
+    json_path, ref_raw = generate_raw_references(title, description, bib_refs, tldr, max_kw_refs,  save_to)
+    json_content = ref_raw.to_json()
 
     client = Client("https://shaocongma-evaluate-specter-embeddings.hf.space/")
     result = client.predict(
@@ -42,6 +45,7 @@ def generate_top_k_references(title, description="",
     with open(result) as f:
         result = json.load(f)
     return result
+
 
 if __name__ == "__main__":
     import openai

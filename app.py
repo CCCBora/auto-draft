@@ -119,11 +119,30 @@ ACADEMIC_PAPER = """## 一键生成论文初稿
 
 
 REFERENCES = """## 一键搜索相关论文
-
+(此功能已经被整合进一键生成论文初稿)
 1. 在Title文本框中输入想要搜索文献的论文（比如Playing Atari with Deep Reinforcement Learning). 
 2. 点击Submit. 等待大概十分钟. 
 3. 在右侧JSON处会显示相关文献.  
 """
+
+REFERENCES_INSTRUCTION = """### References
+这一行用于定义AI如何选取参考文献. 目前是两种方式混合:
+1. GPT自动根据标题生成关键字，使用Semantic Scholar搜索引擎搜索文献，利用Specter获取Paper Embedding来自动选取最相关的文献作为GPT的参考资料.
+2. 用户上传bibtex文件，使用Google Scholar搜索摘要作为GPT的参考资料. 
+关于有希望利用本地文件来供GPT参考的功能将在未来实装.
+"""
+
+DOMAIN_KNOWLEDGE_INSTRUCTION = """### Domain Knowledge
+(暂未实装)
+这一行用于定义AI的知识库. 将提供两种选择: 
+1. 各个领域内由专家预先收集资料并构建的的FAISS向量数据库. 每个数据库内包含了数百万页经过同行评议的论文和专业经典书籍. 
+2. 自行构建的使用OpenAI text-embedding-ada-002模型创建的FAISS向量数据库.
+"""
+
+OTHERS_INSTRUCTION = """### Others
+
+"""
+
 
 with gr.Blocks(theme=theme) as demo:
     gr.Markdown('''
@@ -152,20 +171,40 @@ with gr.Blocks(theme=theme) as demo:
                 title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
                                    label="Title", info="论文标题")
 
+                slider = gr.Slider(minimum=1, maximum=100, value=20, step=1,
+                                   interactive=True, visible=False, label="最大参考文献数目")
                 with gr.Accordion("高级设置", open=False):
-                    description_pp = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
-                                                info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
+                    with gr.Row():
+                        description_pp = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
+                                                    info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
+                        with gr.Row():
+                            template = gr.Dropdown(label="Template", choices=["ICLR2022"], value="ICLR2022",
+                                                   interactive=False,
+                                                   info="生成论文的参考模板. (暂不支持修改)")
+                            model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
+                                                          value="gpt-3.5-turbo",
+                                                          interactive=True,
+                                                          info="生成论文用到的语言模型.")
+                        sections = gr.CheckboxGroup(
+                            choices=["introduction", "related works", "backgrounds", "methodology", "experiments",
+                                     "conclusion", "abstract"],
+                            type="value", label="生成章节", interactive=True,
+                            value=["introduction", "related works"])
 
                     with gr.Row():
-                        with gr.Column():
-                            with gr.Row():
-                                template = gr.Dropdown(label="Template", choices=["ICLR2022"], value="ICLR2022",
-                                                       interactive=False,
-                                                       info="生成论文的参考模板. (暂不支持修改)")
-                                model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
-                                                              value="gpt-3.5-turbo",
-                                                              interactive=True,
-                                                              info="生成论文用到的语言模型.")
+                        with gr.Column(scale=1):
+                            gr.Markdown(REFERENCES_INSTRUCTION)
+
+                        with gr.Column(scale=2):
+                            search_engine = gr.Dropdown(label="Search Engine",
+                                                        choices=["ArXiv", "Semantic Scholar", "Google Scholar", "None"],
+                                                        value="Semantic Scholar",
+                                                        interactive=False,
+                                                        visible=False,
+                                                        info="用于决定GPT用什么搜索引擎来搜索文献. (暂不支持修改)")
+                            tldr_checkbox = gr.Checkbox(value=True, label="TLDR;",
+                                                        info="选择此筐表示将使用Semantic Scholar的TLDR作为文献的总结.",
+                                                        interactive=True)
                             gr.Markdown('''
                             上传.bib文件提供AI需要参考的文献. 
                             ''')
@@ -175,28 +214,23 @@ with gr.Blocks(theme=theme) as demo:
                                 examples=["latex_templates/example_references.bib"],
                                 inputs=bibtex_file
                             )
-                        with gr.Column():
-                            search_engine = gr.Dropdown(label="Search Engine",
-                                                        choices=["ArXiv", "Semantic Scholar", "Google Scholar", "None"],
-                                                        value="Semantic Scholar",
-                                                        interactive=False,
-                                                        info="用于决定GPT-4用什么搜索引擎来搜索文献. (暂不支持修改)")
-                            tldr_checkbox = gr.Checkbox(value=True, label="TLDR;",
-                                                        info="选择此筐表示将使用Semantic Scholar的TLDR作为文献的总结.",
-                                                        interactive=True)
-                            sections = gr.CheckboxGroup(
-                                choices=["introduction", "related works", "backgrounds", "methodology", "experiments",
-                                         "conclusion", "abstract"],
-                                type="value", label="生成章节", interactive=True,
-                                value=["introduction", "related works"])
-                            slider = gr.Slider(minimum=1, maximum=100, value=20, step=1,
-                                               interactive=True, label="最大参考文献数目")
 
+                    with gr.Row():
+                        with gr.Column(scale=1):
+                            gr.Markdown(DOMAIN_KNOWLEDGE_INSTRUCTION)
+
+                        with gr.Column(scale=2):
+                            domain_knowledge = gr.Dropdown(label="预载知识库",
+                                                        choices=["(None)", "Machine Learning"],
+                                                        value="(None)",
+                                                        interactive=False,
+                                                        info="使用预先构建的知识库. (暂未实装)")
+                            local_domain_knowledge = gr.File(label="本地知识库 (暂未实装)", interactive=False)
                 with gr.Row():
                     clear_button_pp = gr.Button("Clear")
                     submit_button_pp = gr.Button("Submit", variant="primary")
 
-            with gr.Tab("文献搜索 (NEW!)"):
+            with gr.Tab("文献搜索"):
                 gr.Markdown(REFERENCES)
 
                 title_refs = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,

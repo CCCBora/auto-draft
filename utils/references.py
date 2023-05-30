@@ -24,6 +24,9 @@ import bibtexparser
 import random
 from scholarly import scholarly
 from scholarly import ProxyGenerator
+import tiktoken
+import itertools, uuid, json
+from gradio_client import Client
 
 
 ######################################################################################################################
@@ -86,6 +89,16 @@ def load_papers_from_bibtex(bib_file_path):
             bib_papers.append(result)
         return bib_papers
 
+
+
+# `tokenizer`: used to count how many tokens
+tokenizer_name = tiktoken.encoding_for_model('gpt-4')
+tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+
+def tiktoken_len(text):
+    # evaluate how many tokens for the given text
+    tokens = tokenizer.encode(text, disallowed_special=())
+    return len(tokens)
 ######################################################################################################################
 # Semantic Scholar (SS) API
 ######################################################################################################################
@@ -209,10 +222,10 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
 ######################################################################################################################
 
 class References:
-    def __init__(self, title, load_papers):
+    def __init__(self, title, load_papers=None, keyword="customized_refs"):
         if load_papers is not None:
             self.papers = {}
-            self.papers["customized_refs"] = load_papers_from_bibtex(load_papers)
+            self.papers[keyword] = load_papers_from_bibtex(load_papers)
         else:
             self.papers = {}
         self.title = title
@@ -228,15 +241,23 @@ class References:
 
     def collect_papers(self, keywords_dict, tldr=False):
         """
+        Collect as many papers as possible
+
         keywords_dict:
             {"machine learning": 5, "language model": 2};
             the first is the keyword, the second is how many references are needed.
         """
-        for key, counts in keywords_dict.items():
-            self.papers[key] = _collect_papers_ss(key, counts, tldr)
+        keywords = list(keywords_dict)
+        comb_keywords = list(itertools.combinations(keywords, 2))
+        for comb_keyword in comb_keywords:
+            keywords.append(" ".join(comb_keyword))
+        for key in keywords:
+            self.papers[key] = _collect_papers_ss(key, 10, tldr)
+        # for key, counts in keywords_dict.items():
+        #     self.papers[key] = _collect_papers_ss(key, counts, tldr)
 
 
-    def to_bibtex(self, path_to_bibtex="ref.bib", max_num_refs=50):
+    def to_bibtex(self, path_to_bibtex="ref.bib"):
         """
         Turn the saved paper list into bibtex file "ref.bib". Return a list of all `paper_id`.
         """
@@ -244,8 +265,6 @@ class References:
         #   use embeddings to evaluate; keep top k relevant references in papers
         #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
         papers = self._get_papers(keyword = "_all")
-        random.shuffle(papers)
-        papers = papers[:max_num_refs]
 
         # clear the bibtex file
         with open(path_to_bibtex, "w", encoding="utf-8") as file:
@@ -283,14 +302,42 @@ class References:
             papers = self.papers["keyword"]
         return papers
 
-    def to_prompts(self, keyword = "_all"):
+    def to_prompts(self, keyword = "_all", max_tokens = 2048):
         # `prompts`:
         #   {"paper1_bibtex_id": "paper_1_abstract", "paper2_bibtex_id": "paper2_abstract"}
         #   this will be used to instruct GPT model to cite the correct bibtex entry.
-        papers = self._get_papers(keyword)
+
+        # two steps:
+        #   1. Sort everything from most relevant to less relevant
+        #   2. Add paper to prompts until max_tokens
+        json_path = str(uuid.uuid1()) + ".json"
+        papers_json = self.to_json()
+        with open(json_path, "w") as f:
+            json.dump(papers_json, f)
+
+        try:
+            title = self.title
+            client = Client("https://shaocongma-evaluate-specter-embeddings.hf.space/")
+            result = client.predict(
+                title,  # str  in 'Title' Textbox component
+                json_path,  # str (filepath or URL to file) in 'Papers JSON (as string)' File component
+                50,  # int | float (numeric value between 1 and 50) in 'Top-k Relevant Papers' Slider component
+                api_name="/get_k_relevant_papers"
+            )
+            with open(result) as f:
+                result = json.load(f)
+            result = [item for key, item in result.items()]
+        except Exception as e:
+            print(f"Error occurs during calling external API: {e}\n")
+            print("Use default method instead!")
+            result = self._get_papers(keyword)
         prompts = {}
-        for paper in papers:
+        tokens = 0
+        for paper in result:
             prompts[paper["paper_id"]] = paper["abstract"]
+            tokens += tiktoken_len(paper["abstract"])
+            if tokens >= max_tokens:
+                break
         return prompts
 
     def to_json(self, keyword = "_all"):
@@ -304,39 +351,44 @@ class References:
 
 if __name__ == "__main__":
     # testing search results
+    print("================Testing `ss_search`================")
     r = ss_search("Deep Q-Networks", limit=1)  # a list of raw papers
     if r['total'] > 0:
         paper = r['data'][0]
         # print(paper)
 
     # resting References
-    refs = References()
-    # keywords_dict = {
-    #     "Deep Q-Networks": 5,
-    #     "Actor-Critic Algorithms": 4,
-    #     "Exploration-Exploitation Trade-off": 3
-    # }
-    # refs.collect_papers(keywords_dict, tldr=True)
-    # for k in refs.papers:
-    #     papers = refs.papers[k] # for each keyword, there is a list of papers
-    #     print("keyword: ", k)
-    #     for paper in papers:
-    #         print(paper["paper_id"])
-    #
-    # refs.to_bibtex()
-    # papers_json = refs.to_json() # this json can be used to find the most relevant papers
-    # with open("papers.json", "w",  encoding='utf-8') as text_file:
-    #     text_file.write(f"{papers_json}")
+    print("================Testing `References`================")
+    refs = References(title="Super Deep Q-Networks")
+    keywords_dict = {
+        "Deep Q-Networks": 5,
+        "Actor-Critic Algorithms": 4,
+        "Exploration-Exploitation Trade-off": 3
+    }
+    print("================Testing `References.collect_papers`================")
+    refs.collect_papers(keywords_dict, tldr=True)
+    for k in refs.papers:
+        papers = refs.papers[k] # for each keyword, there is a list of papers
+        print("keyword: ", k)
+        for paper in papers:
+            print(paper["paper_id"])
+
+    print("================Testing `References.to_bibtex`================")
+    refs.to_bibtex()
+
+    print("================Testing `References.to_json`================")
+    papers_json = refs.to_json() # this json can be used to find the most relevant papers
+    with open("papers.json", "w",  encoding='utf-8') as text_file:
+        text_file.write(f"{papers_json}")
+
+    print("================Testing `References.to_prompts`================")
+    prompts = refs.to_prompts()
+    print(prompts)
+
+    # bib = "test.bib"
+    # refs.load_papers(bib, "variance-reduction rl")
+    # print(refs.papers)
     #
     # prompts = refs.to_prompts()
-    # print(prompts)
-
-    bib = "test.bib"
-    refs.load_papers(bib, "variance-reduction rl")
-    print(refs.papers)
-
-    prompts = refs.to_prompts()
-    for k in prompts:
-        print(f"{k}: {prompts[k]}\n")
-    # for paper in papers:
-    #     print(paper)
+    # for k in prompts:
+    #     print(f"{k}: {prompts[k]}\n")
