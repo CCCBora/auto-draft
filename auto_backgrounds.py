@@ -1,11 +1,12 @@
 import os.path
-import json
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from utils.tex_processing import create_copies
 from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
+from references_generator import generate_top_k_references
 import logging
 import time
+
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
@@ -32,7 +33,7 @@ def log_usage(usage, generating_target, print_out=True):
     logging.info(message)
 
 def _generation_setup(title, description="", template="ICLR2022", tldr=False,
-                      max_kw_refs=10, max_num_refs=50, bib_refs=None):
+                      max_kw_refs=10, max_num_refs=50, bib_refs=None, max_tokens=2048):
     """
     This function handles the setup process for paper generation; it contains three folds
         1. Copy the template to the outputs folder. Create the log file `generation.log`
@@ -54,7 +55,7 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
         - destination_folder (str): The path to the destination folder where the generation log is saved.
         - all_paper_ids (list): A list of all paper IDs collected for the references.
     """
-    print("Generation setup...")
+    # print("Generation setup...")
     paper = {}
     paper_body = {}
 
@@ -63,9 +64,8 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
     logging.basicConfig(level=logging.INFO, filename=os.path.join(destination_folder, "generation.log") )
 
     # Generate keywords and references
-    print("Initialize the paper information ...")
+    # print("Initialize the paper information ...")
     input_dict = {"title": title, "description": description}
-    # keywords, usage = keywords_generation(input_dict, model="gpt-3.5-turbo", max_kw_refs=max_kw_refs)
     keywords, usage = keywords_generation(input_dict)
     log_usage(usage, "keywords")
 
@@ -75,13 +75,13 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
 
     ref = References(title, bib_refs)
     ref.collect_papers(keywords, tldr=tldr)
-    all_paper_ids = ref.to_bibtex(bibtex_path, max_num_refs) #todo: max_num_refs has not implemented yet
+    all_paper_ids = ref.to_bibtex(bibtex_path)
 
     print(f"The paper information has been initialized. References are saved to {bibtex_path}.")
 
     paper["title"] = title
     paper["description"] = description
-    paper["references"] = ref.to_prompts()
+    paper["references"] = ref.to_prompts(max_tokens=max_tokens)
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
     return paper, destination_folder, all_paper_ids #todo: use `all_paper_ids` to check if all citations are in this list
@@ -107,15 +107,20 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
     return make_archive(destination_folder, filename)
 
 
+
 def generate_draft(title, description="", template="ICLR2022",
                    tldr=True, max_kw_refs=10, max_num_refs=30, sections=None, bib_refs=None, model="gpt-4"):
     # pre-processing `sections` parameter;
+    print("================PRE-PROCESSING================")
     if sections is None:
         sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]
 
     # todo: add more parameters; select which section to generate; select maximum refs.
     paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, max_num_refs, bib_refs)
+
+    # main components
     for section in sections:
+        print(f"================Generate {section}================")
         max_attempts = 4
         attempts_count = 0
         while attempts_count < max_attempts:
@@ -124,17 +129,24 @@ def generate_draft(title, description="", template="ICLR2022",
                 log_usage(usage, section)
                 break
             except Exception as e:
-                message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
+                message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}\n"
                 print(message)
                 logging.info(message)
                 attempts_count += 1
-                time.sleep(20)
+                time.sleep(15)
+
     # post-processing
+    print("================POST-PROCESSING================")
     create_copies(destination_folder)
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
     print("\nMission completed.\n")
     return make_archive(destination_folder, filename)
+
+
+
+
+
 
 
 if __name__ == "__main__":
