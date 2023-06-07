@@ -27,6 +27,7 @@ from scholarly import ProxyGenerator
 import tiktoken
 import itertools, uuid, json
 from gradio_client import Client
+import time
 
 
 ######################################################################################################################
@@ -251,8 +252,10 @@ class References:
         comb_keywords = list(itertools.combinations(keywords, 2))
         for comb_keyword in comb_keywords:
             keywords.append(" ".join(comb_keyword))
+        print("Keywords: ", keywords)
         for key in keywords:
             self.papers[key] = _collect_papers_ss(key, 10, tldr)
+        print("Collected papers: ", papers)
         # for key, counts in keywords_dict.items():
         #     self.papers[key] = _collect_papers_ss(key, counts, tldr)
 

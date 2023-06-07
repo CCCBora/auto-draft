@@ -2,7 +2,7 @@ import os.path
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from utils.tex_processing import create_copies
-from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
+from section_generator import keywords_generation, section_generation # figures_generation, section_generation_bg,
 import logging
 import time
 
@@ -34,7 +34,7 @@ def log_usage(usage, generating_target, print_out=True):
 
 
 def _generation_setup(title, description="", template="ICLR2022", tldr=False,
-                      max_kw_refs=10, max_num_refs=50, bib_refs=None, max_tokens=2048):
+                      max_kw_refs=10, bib_refs=None, max_tokens=2048):
     """
     This function handles the setup process for paper generation; it contains three folds
         1. Copy the template to the outputs folder. Create the log file `generation.log`
@@ -73,9 +73,8 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
     keywords, usage = keywords_generation(input_dict)
     log_usage(usage, "keywords")
 
-    # generate keywords dictionary
+    # generate keywords dictionary # todo: in some rare situations, collected papers will be an empty list.
     keywords = {keyword:max_kw_refs for keyword in keywords}
-    print(f"keywords: {keywords}\n\n")
 
     ref = References(title, bib_refs)
     ref.collect_papers(keywords, tldr=tldr)
@@ -113,7 +112,7 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
 
 
 def generate_draft(title, description="", template="ICLR2022",
-                   tldr=True, max_kw_refs=10, max_num_refs=30, sections=None, bib_refs=None, model="gpt-4"):
+                   tldr=True, max_kw_refs=10, sections=None, bib_refs=None, model="gpt-4"):
 
     def _filter_sections(sections):
         ordered_sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion",
@@ -121,7 +120,8 @@ def generate_draft(title, description="", template="ICLR2022",
         return [section for section in ordered_sections if section in sections]
     # pre-processing `sections` parameter;
     print("================START================")
-    print(f"Generating {title}.")
+    print(f"Generating the paper '{title}'.")
+    print("\n") # todo: use a configuration file to define parameters
     print("================PRE-PROCESSING================")
     if sections is None:
         sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]
@@ -132,7 +132,7 @@ def generate_draft(title, description="", template="ICLR2022",
         max_tokens = 4096
     else:
         max_tokens = 2048
-    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, max_num_refs, bib_refs, max_tokens=max_tokens)
+    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, bib_refs, max_tokens=max_tokens)
 
     # main components
     print(f"================PROCESSING================")
