@@ -334,8 +334,12 @@ class References:
         prompts = {}
         tokens = 0
         for paper in result:
-            prompts[paper["paper_id"]] = paper["abstract"]
-            tokens += tiktoken_len(paper["abstract"])
+            abstract = paper.get("abstract")
+            if abstract is not None and isinstance(abstract, str):
+                prompts[paper["paper_id"]] = paper["abstract"]
+                tokens += tiktoken_len(paper["abstract"])
+            else:
+                prompts[paper["paper_id"]] = " "
             if tokens >= max_tokens:
                 break
         return prompts
