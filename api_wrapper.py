@@ -12,18 +12,26 @@ todo:
         If `generator_wrapper` returns nothing or Timeout, or raise any error:
             Change Task status from Running to Failed.
 '''
+import os.path
 
 from auto_backgrounds import generate_draft
-import json
+import json, time
+from utils.file_operations import make_archive
 
 
-GENERATOR_MAPPING = {"draft": generate_draft}
+# GENERATOR_MAPPING = {"draft": generate_draft}
+GENERATOR_MAPPING = {"draft": None}
 
 def generator_wrapper(path_to_config_json):
     # Read configuration file and call corresponding function
     with open(path_to_config_json, "r", encoding='utf-8') as f:
         config = json.load(f)
-
-    generator = GENERATOR_MAPPING.get(config["generator"])
+    print("Configuration:", config)
+    # generator = GENERATOR_MAPPING.get(config["generator"])
+    generator = None
     if generator is None:
-        pass
+        # generate a fake ZIP file and upload
+        time.sleep(150)
+        zip_path = os.path.splitext(path_to_config_json)[0]+".zip"
+        return make_archive(path_to_config_json, zip_path)
+

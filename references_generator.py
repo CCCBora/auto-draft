@@ -1,7 +1,16 @@
+'''
+This script is used to generate the most relevant papers of a given title.
+    - Search for as many as possible references. For 10~15 keywords, 10 references each.
+    - Sort the results from most relevant to least relevant.
+    - Return the most relevant using token size.
+
+Note: we do not use this function in auto-draft function. It has been integrated in that.
+'''
+
 import os.path
 import json
 from utils.references import References
-from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
+from section_generator import keywords_generation # section_generation_bg,  #, figures_generation, section_generation
 import itertools
 from gradio_client import Client
 

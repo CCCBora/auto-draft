@@ -2,8 +2,7 @@ import os.path
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from utils.tex_processing import create_copies
-from section_generator import section_generation_bg, keywords_generation, figures_generation, section_generation
-from references_generator import generate_top_k_references
+from section_generator import keywords_generation, section_generation # figures_generation, section_generation_bg,
 import logging
 import time
 
@@ -26,14 +25,16 @@ def log_usage(usage, generating_target, print_out=True):
     TOTAL_PROMPTS_TOKENS += prompts_tokens
     TOTAL_COMPLETION_TOKENS += completion_tokens
 
-    message = f"For generating {generating_target}, {total_tokens} tokens have been used ({prompts_tokens} for prompts; {completion_tokens} for completion). " \
+    message = f"For generating {generating_target}, {total_tokens} tokens have been used " \
+              f"({prompts_tokens} for prompts; {completion_tokens} for completion). " \
               f"{TOTAL_TOKENS} tokens have been used in total.\n\n"
     if print_out:
         print(message)
     logging.info(message)
 
+
 def _generation_setup(title, description="", template="ICLR2022", tldr=False,
-                      max_kw_refs=10, max_num_refs=50, bib_refs=None, max_tokens=2048):
+                      max_kw_refs=10, bib_refs=None, max_tokens=2048):
     """
     This function handles the setup process for paper generation; it contains three folds
         1. Copy the template to the outputs folder. Create the log file `generation.log`
@@ -44,9 +45,12 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
         title (str): The title of the paper.
         description (str, optional): A short description or abstract for the paper. Defaults to an empty string.
         template (str, optional): The template to be used for paper generation. Defaults to "ICLR2022".
-        tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be generated for the collected papers. Defaults to False.
-        max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword. Defaults to 10.
-        max_num_refs (int, optional): The maximum number of references that can be included in the paper. Defaults to 50.
+        tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be used
+                               for the collected papers. Defaults to False.
+        max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword.
+                                     Defaults to 10.
+        max_num_refs (int, optional): The maximum number of references that can be included in the paper.
+                                      Defaults to 50.
         bib_refs (list, optional): A list of pre-existing references in BibTeX format. Defaults to None.
 
     Returns:
@@ -69,9 +73,8 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
     keywords, usage = keywords_generation(input_dict)
     log_usage(usage, "keywords")
 
-    # generate keywords dictionary
+    # generate keywords dictionary # todo: in some rare situations, collected papers will be an empty list.
     keywords = {keyword:max_kw_refs for keyword in keywords}
-    print(f"keywords: {keywords}\n\n")
 
     ref = References(title, bib_refs)
     ref.collect_papers(keywords, tldr=tldr)
@@ -109,23 +112,38 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
 
 
 def generate_draft(title, description="", template="ICLR2022",
-                   tldr=True, max_kw_refs=10, max_num_refs=30, sections=None, bib_refs=None, model="gpt-4"):
+                   tldr=True, max_kw_refs=10, sections=None, bib_refs=None, model="gpt-4"):
+
+    def _filter_sections(sections):
+        ordered_sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion",
+                            "abstract"]
+        return [section for section in ordered_sections if section in sections]
     # pre-processing `sections` parameter;
+    print("================START================")
+    print(f"Generating the paper '{title}'.")
+    print("\n") # todo: use a configuration file to define parameters
     print("================PRE-PROCESSING================")
     if sections is None:
         sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]
+    else:
+        sections = _filter_sections(sections)
 
-    # todo: add more parameters; select which section to generate; select maximum refs.
-    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, max_num_refs, bib_refs)
+    if model == "gpt-4":
+        max_tokens = 4096
+    else:
+        max_tokens = 2048
+    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, bib_refs, max_tokens=max_tokens)
 
     # main components
+    print(f"================PROCESSING================")
     for section in sections:
-        print(f"================Generate {section}================")
+        print(f"Generate {section} part...")
         max_attempts = 4
         attempts_count = 0
         while attempts_count < max_attempts:
             try:
                 usage = section_generation(paper, section, destination_folder, model=model)
+                print(f"{section} part has been generated. ")
                 log_usage(usage, section)
                 break
             except Exception as e:
@@ -153,7 +171,7 @@ if __name__ == "__main__":
     import openai
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    title = "Using interpretable boosting algorithms for modeling environmental and agricultural data"
-    description = ""
-    output = generate_draft(title, description, tldr=True, max_kw_refs=10)
+    target_title = "Using interpretable boosting algorithms for modeling environmental and agricultural data"
+    target_description = ""
+    output = generate_draft(target_title, target_description, tldr=True, max_kw_refs=10)
     print(output)
