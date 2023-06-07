@@ -114,14 +114,20 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
 
 def generate_draft(title, description="", template="ICLR2022",
                    tldr=True, max_kw_refs=10, max_num_refs=30, sections=None, bib_refs=None, model="gpt-4"):
+
+    def _filter_sections(sections):
+        ordered_sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion",
+                            "abstract"]
+        return [section for section in ordered_sections if section in sections]
     # pre-processing `sections` parameter;
     print("================START================")
     print(f"Generating {title}.")
     print("================PRE-PROCESSING================")
     if sections is None:
         sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]
+    else:
+        sections = _filter_sections(sections)
 
-    # todo: add more parameters; select which section to generate; select maximum refs.
     if model == "gpt-4":
         max_tokens = 4096
     else:
