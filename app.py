@@ -5,8 +5,8 @@ from auto_backgrounds import generate_backgrounds, generate_draft
 from utils.file_operations import hash_name
 from references_generator import generate_top_k_references
 
-# note: App白屏bug：允许第三方cookie
 # todo:
+#   generation.log sometimes disappears
 #   6. get logs when the procedure is not completed. *
 #   7. 自己的文件库； 更多的prompts
 #   8. Decide on how to generate the main part of a paper * (Langchain/AutoGPT
@@ -54,7 +54,7 @@ def clear_inputs_refs(*args):
 
 
 def wrapped_generator(paper_title, paper_description, openai_api_key=None,
-                      paper_template="ICLR2022", tldr=True, max_num_refs=50, selected_sections=None, bib_refs=None, model="gpt-4",
+                      paper_template="ICLR2022", tldr=True, selected_sections=None, bib_refs=None, model="gpt-4",
                       cache_mode=IS_CACHE_AVAILABLE):
     # if `cache_mode` is True, then follow the following steps:
     #        check if "title"+"description" have been generated before
@@ -82,16 +82,14 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
             # generate the result.
             # output = fake_generate_backgrounds(title, description, openai_key)
             output = generate_draft(paper_title, paper_description, template=paper_template,
-                                    tldr=tldr, max_num_refs=max_num_refs,
-                                    sections=selected_sections, bib_refs=bib_refs, model=model)
+                                    tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
             # output = generate_draft(paper_title, paper_description, template, "gpt-4")
             upload_file(output)
             return output
     else:
         # output = fake_generate_backgrounds(title, description, openai_key)
         output = generate_draft(paper_title, paper_description, template=paper_template,
-                                tldr=tldr, max_num_refs=max_num_refs,
-                                sections=selected_sections, bib_refs=bib_refs, model=model)
+                                tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
         return output
 
 
@@ -170,9 +168,6 @@ with gr.Blocks(theme=theme) as demo:
 
                 title = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
                                    label="Title", info="论文标题")
-
-                slider = gr.Slider(minimum=1, maximum=100, value=20, step=1,
-                                   interactive=True, visible=False, label="最大参考文献数目")
                 with gr.Accordion("高级设置", open=False):
                     with gr.Row():
                         description_pp = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
@@ -264,7 +259,7 @@ with gr.Blocks(theme=theme) as demo:
 
     clear_button_pp.click(fn=clear_inputs, inputs=[title, description_pp], outputs=[title, description_pp])
     submit_button_pp.click(fn=wrapped_generator,
-                           inputs=[title, description_pp, key, template, tldr_checkbox, slider, sections, bibtex_file,
+                           inputs=[title, description_pp, key, template, tldr_checkbox, sections, bibtex_file,
                                    model_selection], outputs=file_output)
 
     clear_button_refs.click(fn=clear_inputs_refs, inputs=[title_refs, slider_refs], outputs=[title_refs, slider_refs])

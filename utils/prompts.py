@@ -9,23 +9,23 @@ log = logging.getLogger(__name__)
 ######################################################################################################################
 # Some basic functions
 ######################################################################################################################
-def generate_keywords_prompts(title, description="", num_refs=5):
-    prompts = f"I am writing a machine learning paper with the title '{title}'. {description}\n" \
-                f"Generate three to five keywords. For each keyword, rate it from 1 to {num_refs}; the larger number means more important." \
-                r"Your response must be in JSON format like {\"keyword1\":1, \"keyword2\":3}."
-    return prompts
-
-def generate_rename_prompts(paper_info, section):
-    prompts = f"Please read the {section} section of the paper {paper_info['title']}: {paper_info['body'][section]}. \n" \
-              f"You need to rename this section to make it more specific to the context. " \
-              r"Response in a dictionary format like {\"option_1\": \"new_section_name_1\", \"option_2\": \"new_section_name_2\", ...}."
-    return prompts
-
-def generate_experiments_prompts(paper_info):
-    prompts = f"I am writing a machine learning paper with the title {paper_info['title']}\n" \
-              f"Please list two to four methods that I should compare my methods with and assign them with scores (5 means most related, 1 means least related). " \
-              r"Response in a dictionary format like {\"method_name_1\": 2, \"method_name_2\": 5, ...}. Use abbreviation to make their names have 5 characters or less."
-    return prompts
+# def generate_keywords_prompts(title, description="", num_refs=5):
+#     prompts = f"I am writing a machine learning paper with the title '{title}'. {description}\n" \
+#                 f"Generate three to five keywords. For each keyword, rate it from 1 to {num_refs}; the larger number means more important." \
+#                 r"Your response must be in JSON format like {\"keyword1\":1, \"keyword2\":3}."
+#     return prompts
+#
+# def generate_rename_prompts(paper_info, section):
+#     prompts = f"Please read the {section} section of the paper {paper_info['title']}: {paper_info['body'][section]}. \n" \
+#               f"You need to rename this section to make it more specific to the context. " \
+#               r"Response in a dictionary format like {\"option_1\": \"new_section_name_1\", \"option_2\": \"new_section_name_2\", ...}."
+#     return prompts
+#
+# def generate_experiments_prompts(paper_info):
+#     prompts = f"I am writing a machine learning paper with the title {paper_info['title']}\n" \
+#               f"Please list two to four methods that I should compare my methods with and assign them with scores (5 means most related, 1 means least related). " \
+#               r"Response in a dictionary format like {\"method_name_1\": 2, \"method_name_2\": 5, ...}. Use abbreviation to make their names have 5 characters or less."
+#     return prompts
 
 
 
@@ -68,6 +68,10 @@ SECTION_GENERATION_SYSTEM = PromptTemplate(input_variables=["research_field"],
 # Academic Paper
 ######################################################################################################################
 
+# When generating Academic Paper. Load instructions.
+# with open("../prompts/instructions.json", "r") as f:
+#     INSTRUCTIONS = json.load(f)
+#
 INSTRUCTIONS = {"introduction":
                     "- Include five paragraph: Establishing the motivation for the research. Explaining its importance and relevance to the AI community. Clearly state the problem you're addressing, your proposed solution, and the specific research questions or objectives. Briefly mention key related works for context and explain the main differences from this work. List three novel contributions of this paper.",
                "results":
@@ -214,3 +218,12 @@ def generate_bg_summary_prompts(paper_info, section):
 
     log.info(f"Generated prompts for {section}: {prompts}")
     return prompts
+
+if __name__ == "__main__":
+    # import json
+    # with open("../prompts/instructions.json", "w") as f:
+    #     json.dump(INSTRUCTIONS, f)
+    import json
+    with open("../prompts/instructions.json", "r") as f:
+        ins = json.load(f)
+    print(ins == INSTRUCTIONS)
