@@ -25,7 +25,7 @@ def get_gpt_responses(systems, prompts, model="gpt-4", temperature=0.4):
 
 
 def get_gpt_responses_test(systems, prompts, model="gpt-4", temperature=0.4, base_url=None, key=None):
-    end_point = r"/v1/chat/completions"
+    end_point = r"/v1/completions"
     if base_url is None:
         base_url =  r"https://api.openai.com" + end_point
     if key is None:
@@ -45,10 +45,13 @@ def get_gpt_responses_test(systems, prompts, model="gpt-4", temperature=0.4, bas
         "message": message,
         "temperature": temperature
     }
+    print(data)
     response = requests.post(url, headers=headers, json=data)
+    print(response)
     response = response.json()
     return response['choices'][0]["message"]["content"]
 
 
 if __name__ == "__main__":
-    pass
+    rep = get_gpt_responses_test(None, "Hello!", base_url=r"https://api.openai.com/v1/completions", key="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")
+    print(rep)

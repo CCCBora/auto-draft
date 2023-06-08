@@ -10,13 +10,13 @@
 #               A sample prompt: {"paper_id": "paper summary"}
 
 # todo: (1) citations & citedby of provided papers:
-    #       load the pre-defined papers; use S2 to find all related works
-    #       add all citations to `bib_papers`
-    #       add all citedby to `bib_papers`
-    #       use Semantic Scholar to find their embeddings
+#       load the pre-defined papers; use S2 to find all related works
+#       add all citations to `bib_papers`
+#       add all citedby to `bib_papers`
+#       use Semantic Scholar to find their embeddings
 #       (2) separate references:
-    #       divide references into different groups to reduce the tokens count
-    #       for generating different paragraph of related works, use different set of references
+#       divide references into different groups to reduce the tokens count
+#       for generating different paragraph of related works, use different set of references
 
 import requests
 import re
@@ -44,7 +44,7 @@ def remove_newlines(serie):
 
 def search_paper_abstract(title):
     pg = ProxyGenerator()
-    success = pg.FreeProxies() #pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155")
+    success = pg.FreeProxies()  # pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155")
     if success:
         try:
             scholarly.use_proxy(pg)
@@ -91,15 +91,17 @@ def load_papers_from_bibtex(bib_file_path):
         return bib_papers
 
 
-
 # `tokenizer`: used to count how many tokens
 tokenizer_name = tiktoken.encoding_for_model('gpt-4')
 tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+
 
 def tiktoken_len(text):
     # evaluate how many tokens for the given text
     tokens = tokenizer.encode(text, disallowed_special=())
     return len(tokens)
+
+
 ######################################################################################################################
 # Semantic Scholar (SS) API
 ######################################################################################################################
@@ -218,6 +220,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
     results = parse_search_results(search_results)
     return results
 
+
 ######################################################################################################################
 # References Class
 ######################################################################################################################
@@ -225,8 +228,7 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
 class References:
     def __init__(self, title, load_papers=None, keyword="customized_refs"):
         if load_papers is not None:
-            self.papers = {}
-            self.papers[keyword] = load_papers_from_bibtex(load_papers)
+            self.papers = {keyword: load_papers_from_bibtex(load_papers)}
         else:
             self.papers = {}
         self.title = title
@@ -259,7 +261,6 @@ class References:
         # for key, counts in keywords_dict.items():
         #     self.papers[key] = _collect_papers_ss(key, counts, tldr)
 
-
     def to_bibtex(self, path_to_bibtex="ref.bib"):
         """
         Turn the saved paper list into bibtex file "ref.bib". Return a list of all `paper_id`.
@@ -267,7 +268,7 @@ class References:
         # todo:
         #   use embeddings to evaluate; keep top k relevant references in papers
         #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
-        papers = self._get_papers(keyword = "_all")
+        papers = self._get_papers(keyword="_all")
 
         # clear the bibtex file
         with open(path_to_bibtex, "w", encoding="utf-8") as file:
@@ -296,7 +297,7 @@ class References:
                 file.write("\n\n")
         return paper_ids
 
-    def _get_papers(self, keyword = "_all"):
+    def _get_papers(self, keyword="_all"):
         if keyword == "_all":
             papers = []
             for k, v in self.papers.items():
@@ -305,7 +306,7 @@ class References:
             papers = self.papers["keyword"]
         return papers
 
-    def to_prompts(self, keyword = "_all", max_tokens = 2048):
+    def to_prompts(self, keyword="_all", max_tokens=2048):
         # `prompts`:
         #   {"paper1_bibtex_id": "paper_1_abstract", "paper2_bibtex_id": "paper2_abstract"}
         #   this will be used to instruct GPT model to cite the correct bibtex entry.
@@ -319,6 +320,7 @@ class References:
             json.dump(papers_json, f)
 
         try:
+            # Use external API to obtain the most relevant papers
             title = self.title
             client = Client("https://shaocongma-evaluate-specter-embeddings.hf.space/")
             result = client.predict(
@@ -347,13 +349,12 @@ class References:
                 break
         return prompts
 
-    def to_json(self, keyword = "_all"):
+    def to_json(self, keyword="_all"):
         papers = self._get_papers(keyword)
         papers_json = {}
         for paper in papers:
             papers_json[paper["paper_id"]] = paper
         return papers_json
-
 
 
 if __name__ == "__main__":
@@ -375,7 +376,7 @@ if __name__ == "__main__":
     print("================Testing `References.collect_papers`================")
     refs.collect_papers(keywords_dict, tldr=True)
     for k in refs.papers:
-        papers = refs.papers[k] # for each keyword, there is a list of papers
+        papers = refs.papers[k]  # for each keyword, there is a list of papers
         print("keyword: ", k)
         for paper in papers:
             print(paper["paper_id"])
@@ -384,8 +385,8 @@ if __name__ == "__main__":
     refs.to_bibtex()
 
     print("================Testing `References.to_json`================")
-    papers_json = refs.to_json() # this json can be used to find the most relevant papers
-    with open("papers.json", "w",  encoding='utf-8') as text_file:
+    papers_json = refs.to_json()  # this json can be used to find the most relevant papers
+    with open("papers.json", "w", encoding='utf-8') as text_file:
         text_file.write(f"{papers_json}")
 
     print("================Testing `References.to_prompts`================")

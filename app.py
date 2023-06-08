@@ -6,7 +6,6 @@ from utils.file_operations import hash_name
 from references_generator import generate_top_k_references
 
 # todo:
-#   generation.log sometimes disappears
 #   6. get logs when the procedure is not completed. *
 #   7. 自己的文件库； 更多的prompts
 #   8. Decide on how to generate the main part of a paper * (Langchain/AutoGPT
@@ -15,10 +14,8 @@ from references_generator import generate_top_k_references
 #   3. Check API Key GPT-4 Support.
 #   8. Re-build some components using `langchain`
 #           - in `gpt_interation`, use LLM
-#   5. 从提供的bib文件中 找到cite和citedby的文章, 计算embeddings; 从整个paper list中 根据cos距离进行排序; 选取max_refs的文章
 # future:
-#   4. add auto_polishing function
-#   12. Change link to more appealing color # after the website is built;
+#   generation.log sometimes disappears (ignore this)
 #   1. Check if there are any duplicated citations
 #   2. Remove potential thebibliography and bibitem in .tex file
 
