@@ -1,0 +1,68 @@
+\section{methodology}
+
+In this section, we present the methodology of our proposed decentralized reinforcement learning (RL) algorithm for playing Atari games. We begin with a high-level overview of the method, followed by a detailed formulation of the algorithm and an explanation of how it overcomes the weaknesses of existing methods. Finally, we highlight the key concepts in our approach and elaborate on their novelty using formulas and figures.
+
+\subsection{Overview of the Proposed Method}
+
+Our proposed method, Decentralized Atari Learning (DAL), combines the strengths of both value-based and policy-based decentralized RL algorithms to address the challenges of high-dimensional sensory input and complex decision-making processes in Atari games. The key components of DAL include a decentralized Q-learning framework, a policy gradient-based optimization technique, and a novel communication mechanism that enables agents to share information and coordinate their actions while preserving privacy and reducing communication overhead. Figure \ref{fig1} provides a high-level illustration of the DAL architecture.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig1.png}
+  \caption{High-level architecture of the Decentralized Atari Learning (DAL) algorithm.}
+  \label{fig1}
+\end{figure}
+
+\subsection{Formulation of the Decentralized Atari Learning Algorithm}
+
+The DAL algorithm is designed to overcome the weaknesses of existing decentralized RL methods by incorporating techniques from deep RL, such as experience replay and target networks, to improve stability and convergence. The algorithm consists of the following main steps:
+
+\begin{algorithm}[h]
+\caption{Decentralized Atari Learning (DAL)}
+\begin{algorithmic}[1]
+\STATE Initialize the decentralized Q-network $Q(s, a; \theta)$ and the target network $Q(s, a; \theta^-)$ with random weights $\theta$ and $\theta^-$.
+\FOR{each agent $i$}
+    \STATE Initialize the experience replay buffer $D_i$.
+    \FOR{each episode}
+        \STATE Initialize the state $s$.
+        \FOR{each time step $t$}
+            \STATE Agent $i$ selects an action $a$ according to its local policy $\pi_i$ and the decentralized Q-network $Q(s, a; \theta)$.
+            \STATE Agent $i$ takes action $a$, observes the next state $s'$ and reward $r$, and stores the transition $(s, a, r, s')$ in its experience replay buffer $D_i$.
+            \STATE Agent $i$ samples a mini-batch of transitions from $D_i$ and computes the target values $y = r + \gamma \max_{a'} Q(s', a'; \theta^-)$.
+            \STATE Agent $i$ updates the decentralized Q-network $Q(s, a; \theta)$ using the policy gradient-based optimization technique.
+            \STATE Agent $i$ updates the target network $Q(s, a; \theta^-)$ with the weights of the decentralized Q-network $Q(s, a; \theta)$.
+            \STATE Agent $i$ communicates with neighboring agents to share information and coordinate actions while preserving privacy and reducing communication overhead.
+            \STATE Update the state $s \leftarrow s'$.
+        \ENDFOR
+    \ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Key Concepts and Novelty of the Decentralized Atari Learning Algorithm}
+
+The novelty of the DAL algorithm lies in its combination of value-based and policy-based decentralized RL techniques, as well as its unique communication mechanism that enables agents to share information and coordinate their actions while preserving privacy and reducing communication overhead. In this subsection, we elaborate on these key concepts using formulas and figures.
+
+\paragraph{Decentralized Q-learning and Policy Gradient Optimization}
+
+The DAL algorithm builds upon the decentralized Q-learning framework and incorporates a policy gradient-based optimization technique to balance the trade-offs between exploration and exploitation. The decentralized Q-network $Q(s, a; \theta)$ is used to estimate the action-value function, while the policy gradient-based optimization technique is employed to update the network weights $\theta$. This combination allows the algorithm to learn more efficiently in high-dimensional state spaces and complex decision-making processes, as illustrated in Figure \ref{fig2}.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig2.png}
+  \caption{Illustration of the decentralized Q-learning and policy gradient optimization in the DAL algorithm.}
+  \label{fig2}
+\end{figure}
+
+\paragraph{Novel Communication Mechanism}
+
+The communication mechanism in DAL enables agents to share information and coordinate their actions while preserving privacy and reducing communication overhead. This is achieved through a secure and efficient communication protocol that allows agents to exchange only the necessary information for coordination, without revealing their entire state or action history. Figure \ref{fig3} provides an illustration of the communication mechanism in the DAL algorithm.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{fig3.png}
+  \caption{Illustration of the novel communication mechanism in the DAL algorithm.}
+  \label{fig3}
+\end{figure}
+
+In summary, our proposed Decentralized Atari Learning (DAL) algorithm combines the strengths of both value-based and policy-based decentralized RL techniques and introduces a novel communication mechanism to address the challenges of high-dimensional sensory input and complex decision-making processes in Atari games. The algorithm demonstrates competitive performance compared to centralized methods and outperforms existing decentralized RL algorithms in the Atari domain.

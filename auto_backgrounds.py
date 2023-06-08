@@ -2,10 +2,9 @@ import os.path
 from utils.references import References
 from utils.file_operations import hash_name, make_archive, copy_templates
 from utils.tex_processing import create_copies
-from section_generator import keywords_generation, section_generation # figures_generation, section_generation_bg,
+from section_generator import keywords_generation, section_generation  # figures_generation, section_generation_bg,
 import logging
 import time
-
 
 TOTAL_TOKENS = 0
 TOTAL_PROMPTS_TOKENS = 0
@@ -49,9 +48,7 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
                                for the collected papers. Defaults to False.
         max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword.
                                      Defaults to 10.
-        max_num_refs (int, optional): The maximum number of references that can be included in the paper.
-                                      Defaults to 50.
-        bib_refs (list, optional): A list of pre-existing references in BibTeX format. Defaults to None.
+        bib_refs (path to a bibtex file, optional).
 
     Returns:
     tuple: A tuple containing the following elements:
@@ -65,7 +62,7 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
 
     # Create a copy in the outputs folder.
     bibtex_path, destination_folder = copy_templates(template, title)
-    logging.basicConfig(level=logging.INFO, filename=os.path.join(destination_folder, "generation.log") )
+    logging.basicConfig(level=logging.INFO, filename=os.path.join(destination_folder, "generation.log"))
 
     # Generate keywords and references
     # print("Initialize the paper information ...")
@@ -74,7 +71,7 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
     log_usage(usage, "keywords")
 
     # generate keywords dictionary # todo: in some rare situations, collected papers will be an empty list.
-    keywords = {keyword:max_kw_refs for keyword in keywords}
+    keywords = {keyword: max_kw_refs for keyword in keywords}
 
     ref = References(title, bib_refs)
     ref.collect_papers(keywords, tldr=tldr)
@@ -87,8 +84,8 @@ def _generation_setup(title, description="", template="ICLR2022", tldr=False,
     paper["references"] = ref.to_prompts(max_tokens=max_tokens)
     paper["body"] = paper_body
     paper["bibtex"] = bibtex_path
-    return paper, destination_folder, all_paper_ids #todo: use `all_paper_ids` to check if all citations are in this list
-
+    return paper, destination_folder, all_paper_ids
+    # todo: use `all_paper_ids` to check if all citations are in this list
 
 
 def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
@@ -110,21 +107,47 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
     return make_archive(destination_folder, filename)
 
 
-
 def generate_draft(title, description="", template="ICLR2022",
                    tldr=True, max_kw_refs=10, sections=None, bib_refs=None, model="gpt-4"):
+    """
+    This function generates a draft paper using the provided information; it contains three steps: 1. Pre-processing:
+    Initializes the setup for paper generation and filters the sections to be included in the paper. 2. Processing:
+    Generates each section of the paper. 3. Post-processing: Creates backup copies of the paper and returns the paper
+    in a zipped format.
+
+    Parameters:
+        title (str): The title of the paper.
+        description (str, optional): A short description or abstract for the paper. Defaults to an empty string.
+        template (str, optional): The template to be used for paper generation. Defaults to "ICLR2022".
+        tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be used
+                               for the collected papers. Defaults to True.
+        max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword.
+                                     Defaults to 10.
+        sections (list, optional): The sections to be included in the paper. If not provided, all the standard
+                                   sections are included.
+        bib_refs (path to a bibtex file, optional).
+        model (str, optional): The language model to be used for paper generation. Defaults to "gpt-4".
+
+    Returns:
+    str: The path to the zipped file containing the generated paper and associated files.
+
+    Note: The function also handles errors that occur during section generation and retries a maximum of 4 times
+    before proceeding.
+    """
 
     def _filter_sections(sections):
         ordered_sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion",
                             "abstract"]
         return [section for section in ordered_sections if section in sections]
+
     # pre-processing `sections` parameter;
     print("================START================")
     print(f"Generating the paper '{title}'.")
-    print("\n") # todo: use a configuration file to define parameters
+    print("\n")  # todo: use a configuration file to define parameters
     print("================PRE-PROCESSING================")
     if sections is None:
-        sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion", "abstract"]
+        sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion",
+                    "abstract"]
     else:
         sections = _filter_sections(sections)
 
@@ -132,7 +155,8 @@ def generate_draft(title, description="", template="ICLR2022",
         max_tokens = 4096
     else:
         max_tokens = 2048
-    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, bib_refs, max_tokens=max_tokens)
+    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, bib_refs,
+                                                     max_tokens=max_tokens)
 
     # main components
     print(f"================PROCESSING================")
@@ -162,16 +186,10 @@ def generate_draft(title, description="", template="ICLR2022",
     return make_archive(destination_folder, filename)
 
 
-
-
-
-
-
 if __name__ == "__main__":
     import openai
     openai.api_key = os.getenv("OPENAI_API_KEY")
 
-    target_title = "Using interpretable boosting algorithms for modeling environmental and agricultural data"
-    target_description = ""
-    output = generate_draft(target_title, target_description, tldr=True, max_kw_refs=10)
+    target_title = "Playing Atari with Decentralized Reinforcement Learning"
+    output = generate_draft(target_title)
     print(output)
