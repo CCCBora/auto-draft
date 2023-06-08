@@ -1,34 +1,11 @@
 import logging
 from langchain import PromptTemplate
+import os, json
 
 
 log = logging.getLogger(__name__)
 
 # todo: load prompts from configurations
-
-######################################################################################################################
-# Some basic functions
-######################################################################################################################
-# def generate_keywords_prompts(title, description="", num_refs=5):
-#     prompts = f"I am writing a machine learning paper with the title '{title}'. {description}\n" \
-#                 f"Generate three to five keywords. For each keyword, rate it from 1 to {num_refs}; the larger number means more important." \
-#                 r"Your response must be in JSON format like {\"keyword1\":1, \"keyword2\":3}."
-#     return prompts
-#
-# def generate_rename_prompts(paper_info, section):
-#     prompts = f"Please read the {section} section of the paper {paper_info['title']}: {paper_info['body'][section]}. \n" \
-#               f"You need to rename this section to make it more specific to the context. " \
-#               r"Response in a dictionary format like {\"option_1\": \"new_section_name_1\", \"option_2\": \"new_section_name_2\", ...}."
-#     return prompts
-#
-# def generate_experiments_prompts(paper_info):
-#     prompts = f"I am writing a machine learning paper with the title {paper_info['title']}\n" \
-#               f"Please list two to four methods that I should compare my methods with and assign them with scores (5 means most related, 1 means least related). " \
-#               r"Response in a dictionary format like {\"method_name_1\": 2, \"method_name_2\": 5, ...}. Use abbreviation to make their names have 5 characters or less."
-#     return prompts
-
-
-
 ######################################################################################################################
 # System Message
 ######################################################################################################################
@@ -65,47 +42,53 @@ SECTION_GENERATION_SYSTEM = PromptTemplate(input_variables=["research_field"],
 
 
 ######################################################################################################################
-# Academic Paper
+# Prompts for Generating Academic Paper
 ######################################################################################################################
 
+cur_path = os.path.dirname(__file__)
+prompts_path = os.path.join(cur_path, '..\\prompts\\instructions.json')
+print(prompts_path)
+with open(prompts_path, "r") as f:
+    INSTRUCTIONS = json.load(f)
+# f = open(file_path)
 # When generating Academic Paper. Load instructions.
 # with open("../prompts/instructions.json", "r") as f:
 #     INSTRUCTIONS = json.load(f)
 #
-INSTRUCTIONS = {"introduction":
-                    "- Include five paragraph: Establishing the motivation for the research. Explaining its importance and relevance to the AI community. Clearly state the problem you're addressing, your proposed solution, and the specific research questions or objectives. Briefly mention key related works for context and explain the main differences from this work. List three novel contributions of this paper.",
-               "results":
-                    "Write the theoretical results section using LaTeX. Include theorem and corollary to support this paper (with formulas). Explain what assumptions are used and why they are standard and necessary. Do not include \section{...}. ",
-                "conclusion":
-                    "- Read the existing parts of paper and write the conclusion section.",
-                "abstract":
-                    "- Read the existing parts of paper and write the abstract."}
-
-
-INSTRUCTIONS["backgrounds"] = "- Start from one high-level paragraph to state the central problem in this field with detailed examples in industrial applications and theoretical challenges. \n" \
-                              "- Followed by two to three subsections:  Explain the foundational concepts and notations that underpin your research using as many as mathematical formulas (written in LaTeX). " \
-                              "Introduce more necessary mathematical notations, equations, or algorithms that are connected to this work. Present detailed discussions on how these concepts are applied in this paper."
-
-
-INSTRUCTIONS["related works"] = r"- Discuss three to five main related fields to this paper. " \
-                                r"For each field, select five to ten key publications from references. " \
-                                r"For each reference, analyze its strengths and weaknesses in one or two sentences. " \
-                                r"Present the related works in a logical manner, often chronologically. " \
-                                r"Consider using a taxonomy or categorization to structure the discussion. " \
-                                r"Do not use \section{...} or \subsection{...}; use \paragraph{...} to list related fields. "
-
-INSTRUCTIONS["methodology"] =  "- Provide a high-level overview of the proposed method at the beginning of this section. \n " \
-                               "- Assume you have some figures ('fig1.png', 'fig2.png', ...); they can be any figures you need (e.g. flow chart, model architecture, sample output, simulation result, or others you need). Insert figures you need with informative caption. \n" \
-                               "- Use one subsection to give a detailed formulation of the proposed method and explain how it overcomes the weakness of existing methods mentioned in this paper. " \
-                                 " If necessary, write pseudo codes wrapped by \\begin{{algorithm}} ... \\end{{algorithm}} to explain the detailed steps instead of simply listing them. \n" \
-                                "- Use one follow-up subsection to highlight the key concepts in the proposed method. " \
-                                "  Elaborate the novelty of these key concepts using formulas and inserting appropriate figures. \n" \
-                                "- Ensure the name of each subsection to be specific. \n"
-
-INSTRUCTIONS["experiments"] =  "- Provide a high-level overview at the beginning of this section.\n " \
-                               "- If necessary, include a table to compare with other methods and bold our method.\n" \
-                               "- Assume you have some figures ('exp1.png', 'exp2.png', ...); they can be any figures you need (e.g. loss curves, comparison with other methods, visualization, or others you need). Insert figures you need with informative caption. \n" \
-                               "- If necessary, use different subsections to distinguish different experimental setup."
+# INSTRUCTIONS = {"introduction":
+#                     "- Include five paragraph: Establishing the motivation for the research. Explaining its importance and relevance to the AI community. Clearly state the problem you're addressing, your proposed solution, and the specific research questions or objectives. Briefly mention key related works for context and explain the main differences from this work. List three novel contributions of this paper.",
+#                "results":
+#                     "Write the theoretical results section using LaTeX. Include theorem and corollary to support this paper (with formulas). Explain what assumptions are used and why they are standard and necessary. Do not include \section{...}. ",
+#                 "conclusion":
+#                     "- Read the existing parts of paper and write the conclusion section.",
+#                 "abstract":
+#                     "- Read the existing parts of paper and write the abstract."}
+#
+#
+# INSTRUCTIONS["backgrounds"] = "- Start from one high-level paragraph to state the central problem in this field with detailed examples in industrial applications and theoretical challenges. \n" \
+#                               "- Followed by two to three subsections:  Explain the foundational concepts and notations that underpin your research using as many as mathematical formulas (written in LaTeX). " \
+#                               "Introduce more necessary mathematical notations, equations, or algorithms that are connected to this work. Present detailed discussions on how these concepts are applied in this paper."
+#
+#
+# INSTRUCTIONS["related works"] = r"- Discuss three to five main related fields to this paper. " \
+#                                 r"For each field, select five to ten key publications from references. " \
+#                                 r"For each reference, analyze its strengths and weaknesses in one or two sentences. " \
+#                                 r"Present the related works in a logical manner, often chronologically. " \
+#                                 r"Consider using a taxonomy or categorization to structure the discussion. " \
+#                                 r"Do not use \section{...} or \subsection{...}; use \paragraph{...} to list related fields. "
+#
+# INSTRUCTIONS["methodology"] =  "- Provide a high-level overview of the proposed method at the beginning of this section. \n " \
+#                                "- Assume you have some figures ('fig1.png', 'fig2.png', ...); they can be any figures you need (e.g. flow chart, model architecture, sample output, simulation result, or others you need). Insert figures you need with informative caption. \n" \
+#                                "- Use one subsection to give a detailed formulation of the proposed method and explain how it overcomes the weakness of existing methods mentioned in this paper. " \
+#                                  " If necessary, write pseudo codes wrapped by \\begin{{algorithm}} ... \\end{{algorithm}} to explain the detailed steps instead of simply listing them. \n" \
+#                                 "- Use one follow-up subsection to highlight the key concepts in the proposed method. " \
+#                                 "  Elaborate the novelty of these key concepts using formulas and inserting appropriate figures. \n" \
+#                                 "- Ensure the name of each subsection to be specific. \n"
+#
+# INSTRUCTIONS["experiments"] =  "- Provide a high-level overview at the beginning of this section.\n " \
+#                                "- If necessary, include a table to compare with other methods and bold our method.\n" \
+#                                "- Assume you have some figures ('exp1.png', 'exp2.png', ...); they can be any figures you need (e.g. loss curves, comparison with other methods, visualization, or others you need). Insert figures you need with informative caption. \n" \
+#                                "- If necessary, use different subsections to distinguish different experimental setup."
 
 
 def generate_paper_prompts(paper_info, section):
@@ -220,9 +203,9 @@ def generate_bg_summary_prompts(paper_info, section):
     return prompts
 
 if __name__ == "__main__":
-    # import json
-    # with open("../prompts/instructions.json", "w") as f:
-    #     json.dump(INSTRUCTIONS, f)
+    import json
+    with open("../prompts/instructions.json", "w") as f:
+        json.dump(INSTRUCTIONS, f)
     import json
     with open("../prompts/instructions.json", "r") as f:
         ins = json.load(f)

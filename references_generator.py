@@ -32,7 +32,7 @@ def generate_raw_references(title, description="",
     print(f"keywords: {keywords}\n\n")
 
     ref.collect_papers(keywords, tldr=tldr)
-    # paper_json = ref.to_json()
+    paper_json = ref.to_json()
 
     with open(save_to, "w") as f:
         json.dump(paper_json, f)

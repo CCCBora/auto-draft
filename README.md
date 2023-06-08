@@ -2,27 +2,24 @@
 sdk: gradio
 app_file: app.py
 license: mit
-title: 'Auto-Draft: 文献整理辅助工具'
+title: 'Auto-Draft: 学术写作辅助工具'
 colorTo: indigo
 python_version: 3.10.10
 ---
 
 
-# Auto-Draft: 文献整理辅助工具
+# Auto-Draft: 学术写作辅助工具
 
-这个项目旨在辅助AI领域学术论文的文献整理。提供如下功能：
-* 主题归纳： 自动搜索相关文献，总结相关工作。
-* 真实引用：所有引用的文献都有对应原文，避免AI胡说八道。
-* 生成LaTeX模板： 输出结果一键编译。  
+这个项目旨在轻松快捷的生成学术论文! 帮助你解决下面的问题:
+* 自动搜索相关文献, 提供真实有出处的引用.
+* 自动生成LaTeX模板, 为图表和算法预留出位置. 只需要在对应位置填入内容就能得到完整论文. 
 
-运行过程需要能使用GPT-4的API Key. 生成一篇论文需要15000 Tokens(大约0.5到0.8美元). 总共过程需要大约十分钟. 
-
-# 体验地址  
-以下链接提供简单功能的免费体验. 如果需要更定制化的功能, 请参照*使用方法*进行本地部署和自行修改.
+# Huggingface Space  
+项目对硬件要求低. 在Huggingface Space上即可流畅运行：
 
 https://huggingface.co/spaces/auto-academic/auto-draft
 
-# 使用方法 
+# 部署方法 
 1. 克隆此仓库：
 ```angular2html
 git clone https://github.com/CCCBora/auto-draft
@@ -31,14 +28,17 @@ git clone https://github.com/CCCBora/auto-draft
 ```angular2html
 pip install -r requirements.txt
 ```
-3. 在环境变量中设定OPENAI_API_KEY。
-4. 编辑`auto_backgrounds.py`以自定义想要探索的主题和描述，然后运行
+3. 在环境变量中设定OPENAI_API_KEY. 
+4. 编辑`auto_backgrounds.py`以自定义论文标题, 然后运行
 ```angular2html
 python auto_backgrounds.py
 ```
 
+# 修改Prompts
+如果希望对生成内容有更多的控制, 可以修改`prompts/instructions.json`中对每个章节的指导. 
+
 # 示例
-`outputs` 文件夹中提供了部分输入的原始输出. 经由Overleaf直接编译得到. 也可以查看本目录下的sample-output.pdf.
+`outputs` 文件夹中提供了部分输入的原始输出. 经由Overleaf直接编译得到. 也可以查看本目录下的`Playing_Atari_with_Deep_Reinforcement_Learning.pdf`.
 
 Page 1            |  Page 2
 :-------------------------:|:-------------------------:

@@ -2,11 +2,10 @@ import gradio as gr
 import os
 import openai
 from auto_backgrounds import generate_backgrounds, generate_draft
-from utils.file_operations import hash_name
+from utils.file_operations import hash_name, list_folders
 from references_generator import generate_top_k_references
 
 # todo:
-#   generation.log sometimes disappears
 #   6. get logs when the procedure is not completed. *
 #   7. 自己的文件库； 更多的prompts
 #   8. Decide on how to generate the main part of a paper * (Langchain/AutoGPT
@@ -15,10 +14,8 @@ from references_generator import generate_top_k_references
 #   3. Check API Key GPT-4 Support.
 #   8. Re-build some components using `langchain`
 #           - in `gpt_interation`, use LLM
-#   5. 从提供的bib文件中 找到cite和citedby的文章, 计算embeddings; 从整个paper list中 根据cos距离进行排序; 选取max_refs的文章
 # future:
-#   4. add auto_polishing function
-#   12. Change link to more appealing color # after the website is built;
+#   generation.log sometimes disappears (ignore this)
 #   1. Check if there are any duplicated citations
 #   2. Remove potential thebibliography and bibitem in .tex file
 
@@ -45,6 +42,8 @@ else:
     except Exception as e:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
+ALL_TEMPLATES = list_folders("latex_templates")
+
 
 def clear_inputs(*args):
     return "", ""
@@ -64,7 +63,10 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
         bib_refs = bib_refs.name
     if openai_api_key is not None:
         openai.api_key = openai_api_key
-        openai.Model.list()
+        try:
+            openai.Model.list()
+        except Exception as e:
+            raise gr.Error(f"Key错误. Error: {e}")
 
     if cache_mode:
         from utils.storage import list_all_files, download_file, upload_file
@@ -79,17 +81,23 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
             download_file(file_name)
             return file_name
         else:
-            # generate the result.
+            try:
+                # generate the result.
+                # output = fake_generate_backgrounds(title, description, openai_key)
+                output = generate_draft(paper_title, paper_description, template=paper_template,
+                                        tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
+                # output = generate_draft(paper_title, paper_description, template, "gpt-4")
+                upload_file(output)
+                return output
+            except Exception as e:
+                raise gr.Error(f"生成失败. Error {e.__name__}: {e}")
+    else:
+        try:
             # output = fake_generate_backgrounds(title, description, openai_key)
             output = generate_draft(paper_title, paper_description, template=paper_template,
                                     tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
-            # output = generate_draft(paper_title, paper_description, template, "gpt-4")
-            upload_file(output)
-            return output
-    else:
-        # output = fake_generate_backgrounds(title, description, openai_key)
-        output = generate_draft(paper_title, paper_description, template=paper_template,
-                                tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
+        except Exception as e:
+            raise gr.Error(f"生成失败. Error: {e}")
         return output
 
 
@@ -111,7 +119,7 @@ theme = gr.themes.Default(font=gr.themes.GoogleFont("Questrial"))
 ACADEMIC_PAPER = """## 一键生成论文初稿
 
 1. 在Title文本框中输入想要生成的论文名称（比如Playing Atari with Deep Reinforcement Learning). 
-2. 点击Submit. 等待大概十分钟. 
+2. 点击Submit. 等待大概十五分钟(全文). 
 3. 在右侧下载.zip格式的输出，在Overleaf上编译浏览.  
 """
 
@@ -149,6 +157,10 @@ with gr.Blocks(theme=theme) as demo:
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
     通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
     
+    ***2023-06-08 Update***: 
+    * 目前对英文的生成效果更好. 如果需要中文文章可以使用[GPT学术优化](https://github.com/binary-husky/gpt_academic)的`Latex全文翻译、润色`功能. 
+    * GPT3.5模型可能会因为Token数不够导致一部分章节为空. 可以在高级设置里减少生成的章节. 
+    
     ***2023-05-17 Update***: 我的API的余额用完了, 所以这个月不再能提供GPT-4的API Key. 这里为大家提供了一个位置输入OpenAI API Key. 同时也提供了GPT-3.5的兼容. 欢迎大家自行体验. 
     
     如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.
@@ -173,9 +185,9 @@ with gr.Blocks(theme=theme) as demo:
                         description_pp = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
                                                     info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
                         with gr.Row():
-                            template = gr.Dropdown(label="Template", choices=["ICLR2022"], value="ICLR2022",
-                                                   interactive=False,
-                                                   info="生成论文的参考模板. (暂不支持修改)")
+                            template = gr.Dropdown(label="Template", choices=ALL_TEMPLATES, value="Default",
+                                                   interactive=True,
+                                                   info="生成论文的参考模板.")
                             model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
                                                           value="gpt-3.5-turbo",
                                                           interactive=True,
@@ -205,10 +217,6 @@ with gr.Blocks(theme=theme) as demo:
                             ''')
                             bibtex_file = gr.File(label="Upload .bib file", file_types=["text"],
                                                   interactive=True)
-                            gr.Examples(
-                                examples=["latex_templates/example_references.bib"],
-                                inputs=bibtex_file
-                            )
 
                     with gr.Row():
                         with gr.Column(scale=1):
@@ -267,4 +275,4 @@ with gr.Blocks(theme=theme) as demo:
                            inputs=[title_refs, slider_refs, key], outputs=json_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
-demo.launch()
+demo.launch(show_error=True)
