@@ -57,16 +57,12 @@ def create_copies(output_dir):
             shutil.copy2(original_fig, target_fig)
 
 
-
+# todo: post-processing the generated algorithm for correct compile.
 
 
 
 if __name__ == "__main__":
-    auto_draft = os.path.dirname(os.getcwd())
-    directory_path = "outputs/outputs_20230520_110413/"
-    path = os.path.join(auto_draft, directory_path)
-
-    create_copies(path)
+    pass
 
 
 
