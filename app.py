@@ -63,7 +63,10 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
         bib_refs = bib_refs.name
     if openai_api_key is not None:
         openai.api_key = openai_api_key
-        openai.Model.list()
+        try:
+            openai.Model.list()
+        except Exception as e:
+            raise gr.Error(f"Key错误. Error: {e}")
 
     if cache_mode:
         from utils.storage import list_all_files, download_file, upload_file
@@ -78,17 +81,23 @@ def wrapped_generator(paper_title, paper_description, openai_api_key=None,
             download_file(file_name)
             return file_name
         else:
-            # generate the result.
+            try:
+                # generate the result.
+                # output = fake_generate_backgrounds(title, description, openai_key)
+                output = generate_draft(paper_title, paper_description, template=paper_template,
+                                        tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
+                # output = generate_draft(paper_title, paper_description, template, "gpt-4")
+                upload_file(output)
+                return output
+            except Exception as e:
+                raise gr.Error(f"生成失败. Error {e.__name__}: {e}")
+    else:
+        try:
             # output = fake_generate_backgrounds(title, description, openai_key)
             output = generate_draft(paper_title, paper_description, template=paper_template,
                                     tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
-            # output = generate_draft(paper_title, paper_description, template, "gpt-4")
-            upload_file(output)
-            return output
-    else:
-        # output = fake_generate_backgrounds(title, description, openai_key)
-        output = generate_draft(paper_title, paper_description, template=paper_template,
-                                tldr=tldr, sections=selected_sections, bib_refs=bib_refs, model=model)
+        except Exception as e:
+            raise gr.Error(f"生成失败. Error: {e}")
         return output
 
 
@@ -150,7 +159,7 @@ with gr.Blocks(theme=theme) as demo:
     
     ***2023-06-08 Update***: 
     * 目前对英文的生成效果更好. 如果需要中文文章可以使用[GPT学术优化](https://github.com/binary-husky/gpt_academic)的`Latex全文翻译、润色`功能. 
-    * 支持
+    * GPT3.5模型可能会因为Token数不够导致一部分章节为空. 可以在高级设置里减少生成的章节. 
     
     ***2023-05-17 Update***: 我的API的余额用完了, 所以这个月不再能提供GPT-4的API Key. 这里为大家提供了一个位置输入OpenAI API Key. 同时也提供了GPT-3.5的兼容. 欢迎大家自行体验. 
     
@@ -266,4 +275,4 @@ with gr.Blocks(theme=theme) as demo:
                            inputs=[title_refs, slider_refs, key], outputs=json_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
-demo.launch()
+demo.launch(show_error=True)
