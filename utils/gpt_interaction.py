@@ -53,5 +53,4 @@ def get_gpt_responses_test(systems, prompts, model="gpt-4", temperature=0.4, bas
 
 
 if __name__ == "__main__":
-    rep = get_gpt_responses_test(None, "Hello!", base_url=r"https://api.openai.com/v1/completions", key="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")
-    print(rep)
+    pass

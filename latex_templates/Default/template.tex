@@ -1,11 +1,18 @@
 \documentclass{article} % For LaTeX2e
 \UseRawInputEncoding
 \usepackage{graphicx}
-\usepackage{booktabs} 
+\usepackage{booktabs}
+\usepackage{times}
+\usepackage{eso-pic} % used by \AddToShipoutPicture
+\RequirePackage{fancyhdr}
+\RequirePackage{natbib}
+\usepackage{fullpage}
+
 \input{math_commands.tex} 
 \usepackage{hyperref}
 \usepackage{url} 
-\usepackage{algorithmicx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \title{TITLE} 
 \author{GPT-4}
@@ -24,7 +31,7 @@
 \input{conclusion.tex}
 
 \bibliography{ref}
-\bibliographystyle{abbrv}
+\bibliographystyle{iclr2022_conference}
 
 %\appendix
 %\section{Appendix}
