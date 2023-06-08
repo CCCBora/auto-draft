@@ -152,7 +152,7 @@ OTHERS_INSTRUCTION = """### Others
 
 with gr.Blocks(theme=theme) as demo:
     gr.Markdown('''
-    # Auto-Draft: 文献整理辅助工具
+    # Auto-Draft: 学术写作辅助工具
     
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
     通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    

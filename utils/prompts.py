@@ -46,7 +46,7 @@ SECTION_GENERATION_SYSTEM = PromptTemplate(input_variables=["research_field"],
 ######################################################################################################################
 
 cur_path = os.path.dirname(__file__)
-prompts_path = os.path.join(cur_path, '..\\prompts\\instructions.json')
+prompts_path = os.path.join(cur_path, '../prompts/instructions.json')
 print(prompts_path)
 with open(prompts_path, "r") as f:
     INSTRUCTIONS = json.load(f)
