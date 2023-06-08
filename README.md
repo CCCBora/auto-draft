@@ -2,13 +2,13 @@
 sdk: gradio
 app_file: app.py
 license: mit
-title: 'Auto-Draft: 文献整理辅助工具'
+title: 'Auto-Draft: 学术写作辅助工具'
 colorTo: indigo
 python_version: 3.10.10
 ---
 
 
-# Auto-Draft: 文献整理辅助工具
+# Auto-Draft: 学术写作辅助工具
 
 这个项目旨在轻松快捷的生成学术论文! 帮助你解决下面的问题:
 * 自动搜索相关文献, 提供真实有出处的引用.
