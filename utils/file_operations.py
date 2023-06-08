@@ -43,3 +43,8 @@ def copy_templates(template, title):
     replace_title(destination_folder, title)
     return bibtex_path, destination_folder
 
+def list_folders(path):
+    return [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+
+
+

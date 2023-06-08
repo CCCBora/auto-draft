@@ -2,7 +2,7 @@ import gradio as gr
 import os
 import openai
 from auto_backgrounds import generate_backgrounds, generate_draft
-from utils.file_operations import hash_name
+from utils.file_operations import hash_name, list_folders
 from references_generator import generate_top_k_references
 
 # todo:
@@ -41,6 +41,8 @@ else:
         IS_OPENAI_API_KEY_AVAILABLE = True
     except Exception as e:
         IS_OPENAI_API_KEY_AVAILABLE = False
+
+ALL_TEMPLATES = list_folders("latex_templates")
 
 
 def clear_inputs(*args):
@@ -108,7 +110,7 @@ theme = gr.themes.Default(font=gr.themes.GoogleFont("Questrial"))
 ACADEMIC_PAPER = """## 一键生成论文初稿
 
 1. 在Title文本框中输入想要生成的论文名称（比如Playing Atari with Deep Reinforcement Learning). 
-2. 点击Submit. 等待大概十分钟. 
+2. 点击Submit. 等待大概十五分钟(全文). 
 3. 在右侧下载.zip格式的输出，在Overleaf上编译浏览.  
 """
 
@@ -146,6 +148,10 @@ with gr.Blocks(theme=theme) as demo:
     本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
     通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
     
+    ***2023-06-08 Update***: 
+    * 目前对英文的生成效果更好. 如果需要中文文章可以使用[GPT学术优化](https://github.com/binary-husky/gpt_academic)的`Latex全文翻译、润色`功能. 
+    * 支持
+    
     ***2023-05-17 Update***: 我的API的余额用完了, 所以这个月不再能提供GPT-4的API Key. 这里为大家提供了一个位置输入OpenAI API Key. 同时也提供了GPT-3.5的兼容. 欢迎大家自行体验. 
     
     如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***.
@@ -170,9 +176,9 @@ with gr.Blocks(theme=theme) as demo:
                         description_pp = gr.Textbox(lines=5, label="Description (Optional)", visible=True,
                                                     info="对希望生成的论文的一些描述. 包括这篇论文的创新点, 主要贡献, 等.")
                         with gr.Row():
-                            template = gr.Dropdown(label="Template", choices=["ICLR2022"], value="ICLR2022",
-                                                   interactive=False,
-                                                   info="生成论文的参考模板. (暂不支持修改)")
+                            template = gr.Dropdown(label="Template", choices=ALL_TEMPLATES, value="Default",
+                                                   interactive=True,
+                                                   info="生成论文的参考模板.")
                             model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
                                                           value="gpt-3.5-turbo",
                                                           interactive=True,
@@ -202,10 +208,6 @@ with gr.Blocks(theme=theme) as demo:
                             ''')
                             bibtex_file = gr.File(label="Upload .bib file", file_types=["text"],
                                                   interactive=True)
-                            gr.Examples(
-                                examples=["latex_templates/example_references.bib"],
-                                inputs=bibtex_file
-                            )
 
                     with gr.Row():
                         with gr.Column(scale=1):
