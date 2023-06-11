@@ -134,7 +134,7 @@ def wrapped_generator(
         tldr=True, max_kw_refs=10, bib_refs=None, max_tokens_ref=2048,  # references
         knowledge_database=None, max_tokens_kd=2048, query_counts=10,  # domain knowledge
         paper_template="ICLR2022", selected_sections=None, model="gpt-4", prompts_mode=False,  # outputs parameters
-        cache_mode=IS_CACHE_AVAILABLE  # handle cache mode
+        cache_mode=False # IS_CACHE_AVAILABLE  # handle cache mode
 ):
     # if `cache_mode` is True, then follow the following steps:
     #        check if "title"+"description" have been generated before
@@ -271,16 +271,16 @@ with gr.Blocks(theme=theme) as demo:
                     clear_button_pp = gr.Button("Clear")
                     submit_button_pp = gr.Button("Submit", variant="primary")
 
-            # with gr.Tab("文献搜索"):
-            #     gr.Markdown(REFERENCES)
-            #
-            #     title_refs = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
-            #                             label="Title", info="论文标题")
-            #     slider_refs = gr.Slider(minimum=1, maximum=100, value=5, step=1,
-            #                             interactive=True, label="最相关的参考文献数目")
-            #     with gr.Row():
-            #         clear_button_refs = gr.Button("Clear")
-            #         submit_button_refs = gr.Button("Submit", variant="primary")
+            with gr.Tab("文献搜索"):
+                gr.Markdown(REFERENCES)
+
+                title_refs = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
+                                        label="Title", info="论文标题")
+                slider_refs = gr.Slider(minimum=1, maximum=100, value=5, step=1,
+                                        interactive=True, label="最相关的参考文献数目")
+                with gr.Row():
+                    clear_button_refs = gr.Button("Clear")
+                    submit_button_refs = gr.Button("Submit", variant="primary")
 
             with gr.Tab("文献综述 (Coming soon!)"):
                 gr.Markdown('''
@@ -312,9 +312,9 @@ with gr.Blocks(theme=theme) as demo:
                                    domain_knowledge, max_tokens_kd_slider, query_counts_slider,
                                    template, sections, model_selection, prompts_mode], outputs=file_output)
 
-    # clear_button_refs.click(fn=clear_inputs_refs, inputs=[title_refs, slider_refs], outputs=[title_refs, slider_refs])
-    # submit_button_refs.click(fn=wrapped_references_generator,
-    #                          inputs=[title_refs, slider_refs, key], outputs=json_output)
+    clear_button_refs.click(fn=clear_inputs_refs, inputs=[title_refs, slider_refs], outputs=[title_refs, slider_refs])
+    submit_button_refs.click(fn=wrapped_references_generator,
+                             inputs=[title_refs, slider_refs, key], outputs=json_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch(show_error=True)

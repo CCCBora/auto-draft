@@ -5,7 +5,6 @@ from utils.knowledge import Knowledge
 from utils.file_operations import hash_name, make_archive, copy_templates
 from utils.tex_processing import create_copies
 from section_generator import section_generation  # figures_generation, section_generation_bg, keywords_generation,
-from utils.prompts import generate_paper_prompts
 import logging
 import time
 from langchain.vectorstores import FAISS
@@ -146,7 +145,6 @@ def _generation_setup(title, description="", template="ICLR2022",
                 print(f"Failed to query from FAISS. Error {e}. Use empty domain knowledge instead.")
                 domain_knowledge = ""
     else:
-        print("Selected database doesn't exist or no database is selected.")
         domain_knowledge = ""
 
     ###################################################################################################################
@@ -251,14 +249,8 @@ def generate_draft(title, description="", # main input
                                                      knowledge_database=knowledge_database)
 
     # main components
-    prompts_dict = {}
     print(f"================PROCESSING================")
     for section in sections:
-        if prompts_mode:
-            prompts = generate_paper_prompts(paper, section)
-            prompts_dict[section] = prompts
-            continue
-
         print(f"Generate {section} part...")
         max_attempts = 4
         attempts_count = 0
@@ -281,14 +273,7 @@ def generate_draft(title, description="", # main input
     input_dict = {"title": title, "description": description, "generator": "generate_draft"}
     filename = hash_name(input_dict) + ".zip"
     print("\nMission completed.\n")
-
-    if prompts_mode:
-        filename = hash_name(input_dict) + ".json"
-        with open(filename, "w") as f:
-            json.dump(prompts_dict, f)
-        return filename
-    else:
-        return make_archive(destination_folder, filename)
+    return make_archive(destination_folder, filename)
 
 
 if __name__ == "__main__":
