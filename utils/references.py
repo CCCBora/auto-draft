@@ -333,6 +333,8 @@ class References:
         #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
         papers = self._get_papers(keyword="_all")
 
+        l = len(papers)
+        print(f"{l} papers will be added to `ref.bib`.")
         # clear the bibtex file
         with open(path_to_bibtex, "w", encoding="utf-8") as file:
             file.write("")
@@ -358,6 +360,7 @@ class References:
             with open(path_to_bibtex, "a", encoding="utf-8") as file:
                 file.write(bibtex_entry)
                 file.write("\n\n")
+                # print(f'{paper["paper_id"]} has been added to `ref.bib`.')
         return paper_ids
 
     def _get_papers(self, keyword="_all"):
