@@ -1,11 +1,12 @@
 import os
+import time
+
 import openai
 import logging
 import requests
-
+import json
 
 log = logging.getLogger(__name__)
-
 
 def get_gpt_responses(systems, prompts, model="gpt-4", temperature=0.4):
     conversation_history = [
@@ -24,33 +25,98 @@ def get_gpt_responses(systems, prompts, model="gpt-4", temperature=0.4):
     return assistant_message, usage
 
 
-def get_gpt_responses_test(systems, prompts, model="gpt-4", temperature=0.4, base_url=None, key=None):
-    end_point = r"/v1/completions"
-    if base_url is None:
-        base_url =  r"https://api.openai.com" + end_point
-    if key is None:
-        key = os.getenv("OPENAI_API_KEY")
+class GPTModel_API2D_SUPPORT:
+    def __init__(self, model="gpt-4", temperature=0, presence_penalty=0,
+                 frequency_penalty=0, url=None, key=None, max_attempts=1, delay=20):
+        if url is None:
+            url = "https://api.openai.com/v1/chat/completions"
+        if key is None:
+            key = os.getenv("OPENAI_API_KEY")
 
-    url = base_url + end_point
+        self.model = model
+        self.temperature = temperature
+        self.url = url
+        self.key = key
+        self.presence_penalty = presence_penalty
+        self.frequency_penalty = frequency_penalty
+        self.max_attempts = max_attempts
+        self.delay = delay
 
-    headers = {
-        'Content-Type': 'application/json',
-        'Authorization': f'Bearer {key}'  # <-- 把 fkxxxxx 替换成你自己的 Forward Key，注意前面的 Bearer 要保留，并且和 Key 中间有一个空格。
-    }
+    def __call__(self, systems, prompts, return_json=False):
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.key}",
+        }
 
-    message = [{"role": "system", "content": systems},
-                {"role": "user", "content": prompts}]
-    data = {
-        "model": model,
-        "message": message,
-        "temperature": temperature
-    }
-    print(data)
-    response = requests.post(url, headers=headers, json=data)
-    print(response)
-    response = response.json()
-    return response['choices'][0]["message"]["content"]
+        data = {
+                "model": f"{self.model}",
+                "messages": [
+                {"role": "system", "content": systems},
+                {"role": "user", "content": prompts}],
+                "temperature": self.temperature,
+                "n": 1,
+                "stream": False,
+                "presence_penalty": self.presence_penalty,
+                "frequency_penalty": self.frequency_penalty
+                }
+        for _ in range(self.max_attempts):
+            try:
+                # todo: in some cases, UnicodeEncodeError is raised:
+                #   'gbk' codec can't encode character '\xdf' in position 1898: illegal multibyte sequence
+                response = requests.post(self.url, headers=headers, data=json.dumps(data))
+                response = response.json()
+                assistant_message = response['choices'][0]["message"]["content"]
+                usage = response['usage']
+                log.info(assistant_message)
+                if return_json:
+                    assistant_message = json.loads(assistant_message)
+                return assistant_message, usage
+            except Exception as e:
+                print(f"Failed to get response. Error: {e}")
+                time.sleep(self.delay)
+        raise RuntimeError("Failed to get response from OpenAI.")
+
+
+class GPTModel:
+    def __init__(self, model="gpt-4", temperature=0.9, presence_penalty=0,
+                 frequency_penalty=0, max_attempts=1, delay=20):
+        self.model = model
+        self.temperature = temperature
+        self.presence_penalty = presence_penalty
+        self.frequency_penalty = frequency_penalty
+        self.max_attempts = max_attempts
+        self.delay = delay
+
+    def __call__(self, systems, prompts, return_json=False):
+        conversation_history = [
+            {"role": "system", "content": systems},
+            {"role": "user", "content": prompts}
+        ]
+        for _ in range(self.max_attempts):
+            try:
+                response = openai.ChatCompletion.create(
+                    model=self.model,
+                    messages=conversation_history,
+                    n=1,
+                    temperature=self.temperature,
+                    presence_penalty=self.presence_penalty,
+                    frequency_penalty=self.frequency_penalty,
+                    stream=False
+                )
+                assistant_message = response['choices'][0]["message"]["content"]
+                usage = response['usage']
+                log.info(assistant_message)
+                if return_json:
+                    assistant_message = json.loads(assistant_message)
+                return assistant_message, usage
+            except Exception as e:
+                print(f"Failed to get response. Error: {e}")
+                time.sleep(self.delay)
+        raise RuntimeError("Failed to get response from OpenAI.")
+
 
 
 if __name__ == "__main__":
-    pass
+    bot = GPTModel()
+    r = bot("You are an assistant.", "Hello.")
+    print(r)
