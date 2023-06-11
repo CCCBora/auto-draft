@@ -170,7 +170,7 @@ def generate_paper_prompts(paper_info, section):
     # ref_instruction_subprompt - give AI references
     # self_subprompt - give AI existing written parts
     # output_subprompt - tell AI how to output
-    fundamental_subprompt = "Your task is to write the {section} section of the paper with the title '{title}'. {description}\n"
+    fundamental_subprompt = "Your task is to write the {section} section of the paper with the title '{title}'. This paper has the following contributions: {description}\n"
     instruction_subprompt = "\n" \
                             "Your response should follow the following instructions:\n" \
                             "{instruction}\n" \
