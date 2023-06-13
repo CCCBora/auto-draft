@@ -66,7 +66,7 @@ def section_generation(paper, section, save_to_path, model, research_field="mach
                                       model=model, temperature=0.4)
     paper["body"][section] = output
     tex_file = os.path.join(save_to_path, f"{section}.tex")
-    with open(tex_file, "w") as f:
+    with open(tex_file, "w", encoding="utf-8") as f:
         f.write(output)
     time.sleep(5)
     return usage

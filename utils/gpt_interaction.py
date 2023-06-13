@@ -46,6 +46,7 @@ class GPTModel_API2D_SUPPORT:
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.key}",
+            'Content-type': 'text/plain; charset=utf-8'
         }
 
         data = {
@@ -93,30 +94,45 @@ class GPTModel:
             {"role": "user", "content": prompts}
         ]
         for _ in range(self.max_attempts):
-            try:
-                response = openai.ChatCompletion.create(
-                    model=self.model,
-                    messages=conversation_history,
-                    n=1,
-                    temperature=self.temperature,
-                    presence_penalty=self.presence_penalty,
-                    frequency_penalty=self.frequency_penalty,
-                    stream=False
-                )
-                assistant_message = response['choices'][0]["message"]["content"]
-                usage = response['usage']
-                log.info(assistant_message)
-                if return_json:
-                    assistant_message = json.loads(assistant_message)
-                return assistant_message, usage
-            except Exception as e:
-                print(f"Failed to get response. Error: {e}")
-                time.sleep(self.delay)
+            response = openai.ChatCompletion.create(
+                model=self.model,
+                messages=conversation_history,
+                n=1,
+                temperature=self.temperature,
+                presence_penalty=self.presence_penalty,
+                frequency_penalty=self.frequency_penalty,
+                stream=False
+            )
+            assistant_message = response['choices'][0]["message"]["content"]
+            usage = response['usage']
+            log.info(assistant_message)
+            if return_json:
+                assistant_message = json.loads(assistant_message)
+            return assistant_message, usage
+            # try:
+            #     response = openai.ChatCompletion.create(
+            #         model=self.model,
+            #         messages=conversation_history,
+            #         n=1,
+            #         temperature=self.temperature,
+            #         presence_penalty=self.presence_penalty,
+            #         frequency_penalty=self.frequency_penalty,
+            #         stream=False
+            #     )
+            #     assistant_message = response['choices'][0]["message"]["content"]
+            #     usage = response['usage']
+            #     log.info(assistant_message)
+            #     if return_json:
+            #         assistant_message = json.loads(assistant_message)
+            #     return assistant_message, usage
+            # except Exception as e:
+            #     print(f"Failed to get response. Error: {e}")
+            #     time.sleep(self.delay)
         raise RuntimeError("Failed to get response from OpenAI.")
 
 
 
 if __name__ == "__main__":
-    bot = GPTModel()
+    bot = GPTModel(model="gpt-3.5-turbo-16k")
     r = bot("You are an assistant.", "Hello.")
     print(r)

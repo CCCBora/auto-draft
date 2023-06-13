@@ -40,11 +40,13 @@ else:
     except openai.error.AuthenticationError:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
-DEFAULT_MODEL = "gpt-4" if GPT4_ENABLE else "gpt-3.5-turbo"
+DEFAULT_MODEL = "gpt-4" if GPT4_ENABLE else 'gpt-3.5-turbo-16k'
 GPT4_INTERACTIVE = True if GPT4_ENABLE else False
 DEFAULT_SECTIONS = ["introduction", "related works", "backgrounds", "methodology", "experiments",
                     "conclusion", "abstract"] if GPT4_ENABLE \
     else ["introduction", "related works"]
+
+MODEL_LIST = ['gpt-4', 'gpt-3.5-turbo', 'gpt-3.5-turbo-16k']
 
 #######################################################################################################################
 # Load the list of templates & knowledge databases
@@ -68,6 +70,9 @@ ANNOUNCEMENT = """
 
 ## 主要功能
 通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.     
+
+***2023-06-13 Update***: 
+- 增加了最新的gpt-3.5-turbo-16k模型的支持.  
 
 ***2023-06-13 Update***:  
 1. 新增‘高级选项-Prompts模式’. 这个模式仅会输出用于生成论文的Prompts而不会生成论文本身. 可以根据自己的需求修改Prompts, 也可以把Prompts复制给其他语言模型. 
@@ -219,7 +224,7 @@ with gr.Blocks(theme=theme) as demo:
                                 template = gr.Dropdown(label="Template", choices=ALL_TEMPLATES, value="Default",
                                                        interactive=True,
                                                        info="生成论文的模板.")
-                                model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
+                                model_selection = gr.Dropdown(label="Model", choices=MODEL_LIST,
                                                               value=DEFAULT_MODEL,
                                                               interactive=GPT4_INTERACTIVE,
                                                               info="生成论文用到的语言模型.")
@@ -242,7 +247,7 @@ with gr.Blocks(theme=theme) as demo:
                                                        interactive=True, label="MAX_KW_REFS",
                                                        info="每个Keyword搜索几篇参考文献", visible=False)
 
-                            max_tokens_ref_slider = gr.Slider(minimum=256, maximum=4096, value=2048, step=2,
+                            max_tokens_ref_slider = gr.Slider(minimum=256, maximum=8192, value=2048, step=2,
                                                        interactive=True, label="MAX_TOKENS",
                                                        info="参考文献内容占用Prompts中的Token数")
 
@@ -263,7 +268,7 @@ with gr.Blocks(theme=theme) as demo:
                             query_counts_slider = gr.Slider(minimum=1, maximum=20, value=10, step=1,
                                                        interactive=True, label="QUERY_COUNTS",
                                                        info="从知识库内检索多少条内容", visible=False)
-                            max_tokens_kd_slider = gr.Slider(minimum=256, maximum=4096, value=2048, step=2,
+                            max_tokens_kd_slider = gr.Slider(minimum=256, maximum=8192, value=2048, step=2,
                                                       interactive=True, label="MAX_TOKENS",
                                                       info="知识库内容占用Prompts中的Token数")
                             # template = gr.Dropdown(label="Template", choices=ALL_TEMPLATES, value="Default",
