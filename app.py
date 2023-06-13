@@ -40,6 +40,7 @@ else:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
 DEFAULT_MODEL = "gpt-4" if IS_OPENAI_API_KEY_AVAILABLE else "gpt-3.5-turbo"
+GPT4_INTERACTIVE = True if IS_OPENAI_API_KEY_AVAILABLE else False
 DEFAULT_SECTIONS = ["introduction", "related works", "backgrounds", "methodology", "experiments",
                     "conclusion", "abstract"] if IS_OPENAI_API_KEY_AVAILABLE \
     else ["introduction", "related works"]
@@ -60,16 +61,19 @@ theme = gr.themes.Default(font=gr.themes.GoogleFont("Questrial"))
 #     button_primary_background_fill="#281A39"
 # )
 ANNOUNCEMENT = """
-    # Auto-Draft: 学术写作辅助工具
+# Auto-Draft: 学术写作辅助工具
+
+本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
+通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
+
+***2023-06-13 Update***:  
+1. 新增‘高级选项-Prompts模式’. 这个模式仅会输出用于生成论文的Prompts而不会生成论文本身. 可以根据自己的需求修改Prompts, 也可以把Prompts复制给其他语言模型. 
+2. 把默认的ICLR 2022模板改成了Default模板. 不再显示ICLR的页眉页尾.  
+3. 使用GPT-4模型：
+    - 点击Duplicate this Space, 进入Settings-Repository secrets, 点击New Secret添加OPENAI_API_KEY为自己的OpenAI API Key
+    - 或者可以访问[Auto-Draft-Private](https://huggingface.co/spaces/auto-academic/auto-draft-private)
     
-    本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
-    通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
-    
-    ***2023-06-10 Update***:  
-        pass 
-    
-    
-    如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***."""
+如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***."""
 
 ACADEMIC_PAPER = """## 一键生成论文初稿
 1. 在Title文本框中输入想要生成的论文名称（比如Playing Atari with Deep Reinforcement Learning). 
@@ -213,7 +217,7 @@ with gr.Blocks(theme=theme) as demo:
                                                        info="生成论文的模板.")
                                 model_selection = gr.Dropdown(label="Model", choices=["gpt-4", "gpt-3.5-turbo"],
                                                               value=DEFAULT_MODEL,
-                                                              interactive=True,
+                                                              interactive=GPT4_INTERACTIVE,
                                                               info="生成论文用到的语言模型.")
                                 prompts_mode = gr.Checkbox(value=False, visible=True, interactive=True,
                                                              label="Prompts模式",
