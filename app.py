@@ -64,13 +64,15 @@ theme = gr.themes.Default(font=gr.themes.GoogleFont("Questrial"))
 ANNOUNCEMENT = """
 # Auto-Draft: 学术写作辅助工具
 
-本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的auto_draft功能的测试. 
-通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.    
+本Demo提供对[Auto-Draft](https://github.com/CCCBora/auto-draft)的学术论文模板生成功能的测试. 学术综述和Github文档功能正在开发中. 
+
+## 主要功能
+通过输入想要生成的论文名称（比如Playing atari with deep reinforcement learning)，即可由AI辅助生成论文模板.     
 
 ***2023-06-13 Update***:  
 1. 新增‘高级选项-Prompts模式’. 这个模式仅会输出用于生成论文的Prompts而不会生成论文本身. 可以根据自己的需求修改Prompts, 也可以把Prompts复制给其他语言模型. 
 2. 把默认的ICLR 2022模板改成了Default模板. 不再显示ICLR的页眉页尾.  
-3. 中文支持: 把输出结果送入[GPT 学术优化](https://github.com/binary-husky/gpt_academic)中的Latex全文翻译、润色功能即可!
+3. 中文支持: 暂不支持. 建议使用英文生成论文, 然后把输出结果送入[GPT 学术优化](https://github.com/binary-husky/gpt_academic)中的Latex全文翻译、润色功能即可. 
 4. 使用GPT-4模型：
     - 点击Duplicate this Space, 进入Settings-> Repository secrets, 点击New Secret添加OPENAI_API_KEY为自己的OpenAI API Key. 添加GPT4_ENBALE为1. 
     - 或者可以访问[Auto-Draft-Private](https://huggingface.co/spaces/auto-academic/auto-draft-private).
