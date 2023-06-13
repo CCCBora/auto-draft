@@ -21,6 +21,7 @@ from references_generator import generate_top_k_references
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+GPT4_ENBALE = os.getenv("GPT4_ENBALE")
 if access_key_id is None or secret_access_key is None:
     print("Access keys are not provided. Outputs cannot be saved to AWS Cloud Storage.\n")
     IS_CACHE_AVAILABLE = False
@@ -40,7 +41,7 @@ else:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
 DEFAULT_MODEL = "gpt-4" if IS_OPENAI_API_KEY_AVAILABLE else "gpt-3.5-turbo"
-GPT4_INTERACTIVE = True if IS_OPENAI_API_KEY_AVAILABLE else False
+GPT4_INTERACTIVE = True if GPT4_ENBALE else False
 DEFAULT_SECTIONS = ["introduction", "related works", "backgrounds", "methodology", "experiments",
                     "conclusion", "abstract"] if IS_OPENAI_API_KEY_AVAILABLE \
     else ["introduction", "related works"]
@@ -70,8 +71,8 @@ ANNOUNCEMENT = """
 1. 新增‘高级选项-Prompts模式’. 这个模式仅会输出用于生成论文的Prompts而不会生成论文本身. 可以根据自己的需求修改Prompts, 也可以把Prompts复制给其他语言模型. 
 2. 把默认的ICLR 2022模板改成了Default模板. 不再显示ICLR的页眉页尾.  
 3. 使用GPT-4模型：
-    - 点击Duplicate this Space, 进入Settings-Repository secrets, 点击New Secret添加OPENAI_API_KEY为自己的OpenAI API Key
-    - 或者可以访问[Auto-Draft-Private](https://huggingface.co/spaces/auto-academic/auto-draft-private)
+    - 点击Duplicate this Space, 进入Settings-> Repository secrets, 点击New Secret添加OPENAI_API_KEY为自己的OpenAI API Key. 添加GPT4_ENBALE为1. 
+    - 或者可以访问[Auto-Draft-Private](https://huggingface.co/spaces/auto-academic/auto-draft-private).
     
 如果有更多想法和建议欢迎加入QQ群里交流, 如果我在Space里更新了Key我会第一时间通知大家. 群号: ***249738228***."""
 
