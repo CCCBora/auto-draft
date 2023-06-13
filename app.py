@@ -40,7 +40,7 @@ else:
     except openai.error.AuthenticationError:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
-DEFAULT_MODEL = "gpt-4" if IS_OPENAI_API_KEY_AVAILABLE else "gpt-3.5-turbo"
+DEFAULT_MODEL = "gpt-4" if GPT4_ENBALE else "gpt-3.5-turbo"
 GPT4_INTERACTIVE = True if GPT4_ENBALE else False
 DEFAULT_SECTIONS = ["introduction", "related works", "backgrounds", "methodology", "experiments",
                     "conclusion", "abstract"] if IS_OPENAI_API_KEY_AVAILABLE \
