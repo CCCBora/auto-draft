@@ -21,7 +21,7 @@ from references_generator import generate_top_k_references
 openai_key = os.getenv("OPENAI_API_KEY")
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-GPT4_ENBALE = os.getenv("GPT4_ENBALE") # by default None.
+GPT4_ENABLE = os.getenv("GPT4_ENABLE") # by default None.
 if access_key_id is None or secret_access_key is None:
     print("Access keys are not provided. Outputs cannot be saved to AWS Cloud Storage.\n")
     IS_CACHE_AVAILABLE = False
@@ -40,10 +40,10 @@ else:
     except openai.error.AuthenticationError:
         IS_OPENAI_API_KEY_AVAILABLE = False
 
-DEFAULT_MODEL = "gpt-4" if GPT4_ENBALE else "gpt-3.5-turbo"
-GPT4_INTERACTIVE = True if GPT4_ENBALE else False
+DEFAULT_MODEL = "gpt-4" if GPT4_ENABLE else "gpt-3.5-turbo"
+GPT4_INTERACTIVE = True if GPT4_ENABLE else False
 DEFAULT_SECTIONS = ["introduction", "related works", "backgrounds", "methodology", "experiments",
-                    "conclusion", "abstract"] if GPT4_ENBALE \
+                    "conclusion", "abstract"] if GPT4_ENABLE \
     else ["introduction", "related works"]
 
 #######################################################################################################################
