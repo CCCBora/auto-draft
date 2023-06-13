@@ -17,7 +17,7 @@
 #       (2) separate references:
 #       divide references into different groups to reduce the tokens count
 #       for generating different paragraph of related works, use different set of references
-
+from typing import Dict, List
 import requests
 import re
 import bibtexparser
@@ -28,11 +28,75 @@ import tiktoken
 import itertools, uuid, json
 from gradio_client import Client
 import time
+import numpy as np
+from numpy.linalg import norm
 
+
+URL = "https://model-apis.semanticscholar.org/specter/v1/invoke"
+MAX_BATCH_SIZE = 16
+MAX_ATTEMPTS = 20
 
 ######################################################################################################################
 # Some basic tools
 ######################################################################################################################
+def evaluate_cosine_similarity(v1, v2):
+    try:
+        return np.dot(v1, v2)/(norm(v1)*norm(v2))
+    except ValueError:
+        return 0.0
+
+def chunks(lst, chunk_size=MAX_BATCH_SIZE):
+    """Splits a longer list to respect batch size"""
+    for i in range(0, len(lst), chunk_size):
+        yield lst[i : i + chunk_size]
+
+def embed(papers):
+    embeddings_by_paper_id: Dict[str, List[float]] = {}
+    for chunk in chunks(papers):
+        # Allow Python requests to convert the data above to JSON
+        response = requests.post(URL, json=chunk)
+
+        if response.status_code != 200:
+            raise RuntimeError("Sorry, something went wrong, please try later!")
+
+        for paper in response.json()["preds"]:
+            embeddings_by_paper_id[paper["paper_id"]] = paper["embedding"]
+
+    return embeddings_by_paper_id
+
+def get_embeddings(paper_title, paper_description):
+    output = [{"title": paper_title, "abstract": paper_description, "paper_id": "target_paper"}]
+    emb_vector = embed(output)["target_paper"]
+    target_paper = output[0]
+    target_paper["embeddings"] = emb_vector
+    return target_paper
+
+def get_top_k(papers_dict, paper_title, paper_description, k=None):
+    target_paper = get_embeddings(paper_title, paper_description)
+    papers = papers_dict # must include embeddings
+
+    # if k < len(papers_json), return k most relevant papers
+    # if k >= len(papers_json) or k is None, return all papers
+    max_num_papers = len(papers)
+    if k is None:
+        k = max_num_papers
+    num_papers = min(k, max_num_papers)
+
+    # evaluate the cosine similarity for each paper
+    target_embedding_vector = target_paper["embeddings"]
+
+    for k in papers:
+        v = papers[k]
+        embedding_vector = v["embeddings"]
+        cos_sim  = evaluate_cosine_similarity(embedding_vector, target_embedding_vector)
+        papers[k]["cos_sim"] = cos_sim
+
+    # return the best k papers
+    sorted_papers = {k: v for k, v in sorted(papers.items(), key=lambda x: x[1]["cos_sim"], reverse=True)[:num_papers]}
+    for key in sorted_papers:
+        sorted_papers[key].pop("embeddings", None)
+    return sorted_papers
+
 def remove_newlines(serie):
     # This function is applied to the abstract of each paper to reduce the length of prompts.
     serie = serie.replace('\n', ' ')
@@ -89,7 +153,6 @@ def load_papers_from_bibtex(bib_file_path):
             }
             bib_papers.append(result)
         return bib_papers
-
 
 # `tokenizer`: used to count how many tokens
 tokenizer_name = tiktoken.encoding_for_model('gpt-4')
@@ -226,12 +289,13 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
 ######################################################################################################################
 
 class References:
-    def __init__(self, title, load_papers=None, keyword="customized_refs"):
+    def __init__(self, title, load_papers=None, keyword="customized_refs", description=""):
         if load_papers is not None:
             self.papers = {keyword: load_papers_from_bibtex(load_papers)}
         else:
             self.papers = {}
         self.title = title
+        self.description = description
 
     def load_papers(self, bibtex, keyword):
         self.papers[keyword] = load_papers_from_bibtex(bibtex)
@@ -254,7 +318,6 @@ class References:
         comb_keywords = list(itertools.combinations(keywords, 2))
         for comb_keyword in comb_keywords:
             keywords.append(" ".join(comb_keyword))
-        print("Keywords: ", keywords)
         for key in keywords:
             self.papers[key] = _collect_papers_ss(key, 10, tldr)
         # print("Collected papers: ", papers)
@@ -270,6 +333,8 @@ class References:
         #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
         papers = self._get_papers(keyword="_all")
 
+        l = len(papers)
+        print(f"{l} papers will be added to `ref.bib`.")
         # clear the bibtex file
         with open(path_to_bibtex, "w", encoding="utf-8") as file:
             file.write("")
@@ -295,6 +360,7 @@ class References:
             with open(path_to_bibtex, "a", encoding="utf-8") as file:
                 file.write(bibtex_entry)
                 file.write("\n\n")
+                # print(f'{paper["paper_id"]} has been added to `ref.bib`.')
         return paper_ids
 
     def _get_papers(self, keyword="_all"):
@@ -322,15 +388,17 @@ class References:
         try:
             # Use external API to obtain the most relevant papers
             title = self.title
-            client = Client("https://shaocongma-evaluate-specter-embeddings.hf.space/")
-            result = client.predict(
-                title,  # str  in 'Title' Textbox component
-                json_path,  # str (filepath or URL to file) in 'Papers JSON (as string)' File component
-                50,  # int | float (numeric value between 1 and 50) in 'Top-k Relevant Papers' Slider component
-                api_name="/get_k_relevant_papers"
-            )
-            with open(result) as f:
-                result = json.load(f)
+            description = self.description
+            result = get_top_k(papers_json, title, description)
+            # client = Client("https://shaocongma-evaluate-specter-embeddings.hf.space/")
+            # result = client.predict(
+            #     title,  # str  in 'Title' Textbox component
+            #     json_path,  # str (filepath or URL to file) in 'Papers JSON (as string)' File component
+            #     50,  # int | float (numeric value between 1 and 50) in 'Top-k Relevant Papers' Slider component
+            #     api_name="/get_k_relevant_papers"
+            # )
+            # with open(result) as f:
+            #     result = json.load(f)
             result = [item for key, item in result.items()]
         except Exception as e:
             print(f"Error occurs during calling external API: {e}\n")

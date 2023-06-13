@@ -19,10 +19,15 @@ import json, time
 from utils.file_operations import make_archive
 
 
-# GENERATOR_MAPPING = {"draft": generate_draft}
-GENERATOR_MAPPING = {"draft": None}
+GENERATOR_MAPPING = {"fake": None,  # a fake generator
+                     "draft": generate_draft # generate academic paper
+                     }
 
-def generator_wrapper(path_to_config_json):
+def generator_wrapper(config):
+    generator = GENERATOR_MAPPING[config["generator"]]
+
+    
+def generator_wrapper_from_json(path_to_config_json):
     # Read configuration file and call corresponding function
     with open(path_to_config_json, "r", encoding='utf-8') as f:
         config = json.load(f)
