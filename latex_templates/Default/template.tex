@@ -1,0 +1,45 @@
+\documentclass{article} % For LaTeX2e
+\UseRawInputEncoding
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{times}
+\usepackage{eso-pic} % used by \AddToShipoutPicture
+\RequirePackage{fancyhdr}
+\RequirePackage{natbib}
+\usepackage{fullpage}
+
+\input{math_commands.tex} 
+\usepackage{hyperref}
+\usepackage{url} 
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\newlength\tindent
+\setlength{\tindent}{\parindent}
+\setlength{\parindent}{0pt}
+\renewcommand{\indent}{\hspace*{\tindent}}
+
+\title{TITLE} 
+\author{GPT-4}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}} 
+ 
+\begin{document} 
+\maketitle
+\input{abstract.tex}
+\input{introduction.tex}
+\input{related works.tex}
+\input{backgrounds.tex}
+\input{methodology.tex}
+\input{experiments.tex}
+\input{conclusion.tex}
+
+\bibliography{ref}
+\bibliographystyle{iclr2022_conference}
+
+%\appendix
+%\section{Appendix}
+%You may include other additional sections here.
+
+\end{document}
