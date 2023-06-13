@@ -1,0 +1,1 @@
+{"project_name": "be03b609d3a44b77a8b33d4bbe81302c", "pdf_loader": "PyPDFLoader", "chunk_size": 300, "chunk_overlap": 20, "embedding_model": "all-MiniLM-L6-v2", "files": ["ml_books"], "source_path": "D:\\Projects\\faiss_chat\\be03b609d3a44b77a8b33d4bbe81302c\\source_data"}
