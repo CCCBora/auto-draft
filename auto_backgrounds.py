@@ -68,7 +68,7 @@ def _generation_setup(title, description="", template="ICLR2022",
     # print("Generation setup...")
     # paper = {}
     # paper_body = {}
-    llm = GPTModel()
+    llm = GPTModel(model="gpt-3.5-turbo")
 
     # Create a copy in the outputs folder.
     bibtex_path, destination_folder = copy_templates(template, title)

@@ -79,7 +79,7 @@ class GPTModel_API2D_SUPPORT:
 
 
 class GPTModel:
-    def __init__(self, model="gpt-4", temperature=0.9, presence_penalty=0,
+    def __init__(self, model="gpt-3.5-turbo", temperature=0.9, presence_penalty=0,
                  frequency_penalty=0, max_attempts=1, delay=20):
         self.model = model
         self.temperature = temperature
