@@ -106,6 +106,7 @@ class GPTModel:
             assistant_message = response['choices'][0]["message"]["content"]
             usage = response['usage']
             log.info(assistant_message)
+            time.sleep(15)
             if return_json:
                 assistant_message = json.loads(assistant_message)
             return assistant_message, usage
