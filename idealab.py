@@ -8,7 +8,8 @@ from utils.prompts import SYSTEM
 openai_key = os.getenv("OPENAI_API_KEY")
 default_model = os.getenv("DEFAULT_MODEL")
 if default_model is None:
-    default_model = "gpt-3.5-turbo-16k"
+    # default_model = "gpt-3.5-turbo-16k"
+    default_model = "gpt-4"
 
 openai.api_key = openai_key
 
@@ -67,10 +68,13 @@ Instruction:
 
 
 ANNOUNCEMENT = """
-# Paper Bot
+<h1 style="text-align: center"><img src='/file=assets/idealab.png' width=36px style="display: inline"/>灵感实验室IdeaLab</h1>
 
-Criticize your paper's contribution by searching related references online! This nice bot will also give you some suggestions.
+<p>灵感实验室IdeaLab可以为你选择你下一篇论文的研究方向! 输入你的研究领域或者任何想法, 灵感实验室会自动生成若干个论文标题+论文的主要贡献供你选择. </p>
+
+<p>除此之外, 输入你的论文标题+主要贡献, 它会自动搜索相关文献, 来验证这个想法是不是有人做过了.</p>
 """
+
 
 def criticize_my_idea(title, contributions, max_tokens=4096):
     ref = References(title=title, description=f"{contributions}")
@@ -97,13 +101,18 @@ def generate_choices(thoughts):
     return output
 
 
+# def translate_json(json_input):
+#     system_prompt = "You are a translation bot. The user will input a JSON format string. You need to translate it into Chinese and return in the same formmat."
+#     output, _ = llm(systems=system_prompt, prompts=str(json_input), return_json=True)
+#     return output
+
 
 with gr.Blocks() as demo:
     llm = GPTModel(model=default_model)
-    gr.Markdown(ANNOUNCEMENT)
 
+    gr.HTML(ANNOUNCEMENT)
     with gr.Row():
-        with gr.Tab("Make it an idea!"):
+        with gr.Tab("生成论文想法 (Generate Paper Ideas)"):
             thoughts_input = gr.Textbox(label="Thoughts")
             with gr.Accordion("Show prompts", open=False):
                 prompts_1 = gr.Textbox(label="Prompts", interactive=False, value=paper_system_prompt)
@@ -111,7 +120,7 @@ with gr.Blocks() as demo:
             with gr.Row():
                 button_generate_idea = gr.Button("Make it an idea!", variant="primary")
 
-        with gr.Tab("Criticize my idea!"):
+        with gr.Tab("验证想法可行性 (Validate Feasibility)"):
             title_input = gr.Textbox(label="Title")
             contribution_input = gr.Textbox(label="Contributions", lines=5)
             with gr.Accordion("Show prompts", open=False):
@@ -120,15 +129,16 @@ with gr.Blocks() as demo:
             with gr.Row():
                 button_submit = gr.Button("Criticize my idea!", variant="primary")
 
-        with gr.Tab("Make it a paper!"):
-            gr.Markdown("## Coming Soon!")
+        with gr.Tab("生成论文 (Generate Paper)"):
+            gr.Markdown("...")
 
         with gr.Column(scale=1):
             contribution_output = gr.JSON(label="Contributions")
+            # cn_output = gr.JSON(label="主要贡献")
             with gr.Accordion("References", open=False):
                 references_output = gr.JSON(label="References")
 
     button_submit.click(fn=criticize_my_idea, inputs=[title_input, contribution_input], outputs=[contribution_output, references_output])
-    button_generate_idea.click(fn=generate_choices, inputs=thoughts_input, outputs=contribution_output)
+    button_generate_idea.click(fn=generate_choices, inputs=thoughts_input, outputs=contribution_output)#.success(translate_json, contribution_output, cn_output)
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch(show_error=True)

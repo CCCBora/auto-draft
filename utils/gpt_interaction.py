@@ -94,41 +94,25 @@ class GPTModel:
             {"role": "user", "content": prompts}
         ]
         for _ in range(self.max_attempts):
-            response = openai.ChatCompletion.create(
-                model=self.model,
-                messages=conversation_history,
-                n=1,
-                temperature=self.temperature,
-                presence_penalty=self.presence_penalty,
-                frequency_penalty=self.frequency_penalty,
-                stream=False
-            )
-            assistant_message = response['choices'][0]["message"]["content"]
-            usage = response['usage']
-            log.info(assistant_message)
-            time.sleep(15)
-            if return_json:
-                assistant_message = json.loads(assistant_message)
-            return assistant_message, usage
-            # try:
-            #     response = openai.ChatCompletion.create(
-            #         model=self.model,
-            #         messages=conversation_history,
-            #         n=1,
-            #         temperature=self.temperature,
-            #         presence_penalty=self.presence_penalty,
-            #         frequency_penalty=self.frequency_penalty,
-            #         stream=False
-            #     )
-            #     assistant_message = response['choices'][0]["message"]["content"]
-            #     usage = response['usage']
-            #     log.info(assistant_message)
-            #     if return_json:
-            #         assistant_message = json.loads(assistant_message)
-            #     return assistant_message, usage
-            # except Exception as e:
-            #     print(f"Failed to get response. Error: {e}")
-            #     time.sleep(self.delay)
+            try:
+                response = openai.ChatCompletion.create(
+                    model=self.model,
+                    messages=conversation_history,
+                    n=1,
+                    temperature=self.temperature,
+                    presence_penalty=self.presence_penalty,
+                    frequency_penalty=self.frequency_penalty,
+                    stream=False
+                )
+                assistant_message = response['choices'][0]["message"]["content"]
+                usage = response['usage']
+                log.info(assistant_message)
+                if return_json:
+                    assistant_message = json.loads(assistant_message)
+                return assistant_message, usage
+            except openai.error.APIConnectionError as e:
+                print(f"Failed to get response. Error: {e}")
+                time.sleep(self.delay)
         raise RuntimeError("Failed to get response from OpenAI.")
 
 
