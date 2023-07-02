@@ -295,6 +295,7 @@ if __name__ == "__main__":
     import openai
 
     openai.api_key = os.getenv("OPENAI_API_KEY")
+    openai.api_base = os.getenv("OPENAI_API_BASE")
 
     target_title = "Playing Atari with Decentralized Reinforcement Learning"
     output = generate_draft(target_title, knowledge_database="ml_textbook_test")

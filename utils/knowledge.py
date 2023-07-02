@@ -45,3 +45,17 @@ class Knowledge:
             else:
                 prompts.append(prompt)
         return "".join(prompts)
+
+    def to_json(self):
+        if len(self.contents) == 0:
+            return {}
+        output = {}
+        for idx, content in enumerate(self.contents):
+            output[str(idx)] = {
+                "content": content["content"],
+                "score": str(content["score"])
+            }
+        print(output)
+        return output
+
+

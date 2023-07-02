@@ -2,6 +2,14 @@ import hashlib
 import os, shutil
 import datetime
 from utils.tex_processing import replace_title
+import re
+
+def urlify(s):
+    # Remove all non-word characters (everything except numbers and letters)
+    s = re.sub(r"[^\w\s]", '', s)
+    # Replace all runs of whitespace with a single dash
+    s = re.sub(r"\s+", '_', s)
+    return s
 
 def hash_name(input_dict):
     '''

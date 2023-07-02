@@ -1,27 +1,44 @@
+import uuid
 import gradio as gr
 import os
 import openai
 from auto_backgrounds import generate_backgrounds, generate_draft
-from utils.file_operations import hash_name, list_folders
-from references_generator import generate_top_k_references
+from utils.file_operations import list_folders, urlify
+from huggingface_hub import snapshot_download
 
 # todo:
 #   6. get logs when the procedure is not completed. *
 #   7. 自己的文件库； 更多的prompts
 #   2. 实现别的功能
-#   3. Check API Key GPT-4 Support.
 # future:
 #   generation.log sometimes disappears (ignore this)
 #   1. Check if there are any duplicated citations
 #   2. Remove potential thebibliography and bibitem in .tex file
 
 #######################################################################################################################
+# Environment Variables
+#######################################################################################################################
+# OPENAI_API_KEY: OpenAI API key for GPT models
+# OPENAI_API_BASE: (Optional) Support alternative OpenAI minors
+# GPT4_ENABLE: (Optional) Set it to 1 to enable GPT-4 model.
+
+# AWS_ACCESS_KEY_ID: (Optional) Access AWS cloud storage (you need to edit `BUCKET_NAME` in `utils/storage.py` if you need to use this function)
+# AWS_SECRET_ACCESS_KEY: (Optional) Access AWS cloud storage (you need to edit `BUCKET_NAME` in `utils/storage.py` if you need to use this function)
+# KDB_REPO: (Optional) A Huggingface dataset hosting Knowledge Databases
+# HF_TOKEN: (Optional) Access to KDB_REPO
+
+#######################################################################################################################
 # Check if openai and cloud storage available
 #######################################################################################################################
 openai_key = os.getenv("OPENAI_API_KEY")
+openai_api_base = os.getenv("OPENAI_API_BASE")
+if openai_api_base is not None:
+    openai.api_base = openai_api_base
+GPT4_ENABLE = os.getenv("GPT4_ENABLE") # disable GPT-4 for public repo
+
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-GPT4_ENABLE = os.getenv("GPT4_ENABLE") # by default None.
+
 if access_key_id is None or secret_access_key is None:
     print("Access keys are not provided. Outputs cannot be saved to AWS Cloud Storage.\n")
     IS_CACHE_AVAILABLE = False
@@ -47,6 +64,13 @@ DEFAULT_SECTIONS = ["introduction", "related works", "backgrounds", "methodology
     else ["introduction", "related works"]
 
 MODEL_LIST = ['gpt-4', 'gpt-3.5-turbo', 'gpt-3.5-turbo-16k']
+
+HF_TOKEN = os.getenv("HF_TOKEN")
+REPO_ID = os.getenv("KDB_REPO")
+if HF_TOKEN is not None and REPO_ID is not None:
+    snapshot_download(REPO_ID, repo_type="dataset", local_dir="knowledge_databases/",
+                      local_dir_use_symlinks=False, token=HF_TOKEN)
+    KDB_LIST = ["(None)"] + list_folders("knowledge_databases")
 
 #######################################################################################################################
 # Load the list of templates & knowledge databases
@@ -140,7 +164,6 @@ def clear_inputs(*args):
 def clear_inputs_refs(*args):
     return "", 5
 
-
 def wrapped_generator(
         paper_title, paper_description,  # main input
         openai_api_key=None, openai_url=None,  # key
@@ -149,10 +172,8 @@ def wrapped_generator(
         paper_template="ICLR2022", selected_sections=None, model="gpt-4", prompts_mode=False,  # outputs parameters
         cache_mode=IS_CACHE_AVAILABLE  # handle cache mode
 ):
-    # if `cache_mode` is True, then follow the following steps:
-    #        check if "title"+"description" have been generated before
-    #        if so, download from the cloud storage, return it
-    #        if not, generate the result.
+    # if `cache_mode` is True, then always upload the generated content to my S3.
+    file_name_upload = urlify(paper_title) + "_" + uuid.uuid1().hex + ".zip"
     if bib_refs is not None:
         bib_refs = bib_refs.name
     if openai_api_key is not None:
@@ -161,19 +182,6 @@ def wrapped_generator(
             openai.Model.list()
         except Exception as e:
             raise gr.Error(f"Key错误. Error: {e}")
-
-    if cache_mode:
-        from utils.storage import list_all_files, download_file
-        # check if "title"+"description" have been generated before
-        input_dict = {"title": paper_title, "description": paper_description,
-                      "generator": "generate_draft"}
-        file_name = hash_name(input_dict) + ".zip"
-        file_list = list_all_files()
-        # print(f"{file_name} will be generated. Check the file list {file_list}")
-        if file_name in file_list:
-            # download from the cloud storage, return it
-            download_file(file_name)
-            return file_name
     try:
         output = generate_draft(
             paper_title, description=paper_description, # main input
@@ -183,17 +191,10 @@ def wrapped_generator(
            )
         if cache_mode:
             from utils.storage import upload_file
-            upload_file(output)
+            upload_file(output, target_name=file_name_upload)
     except Exception as e:
         raise gr.Error(f"生成失败. Error: {e}")
     return output
-
-
-def wrapped_references_generator(paper_title, num_refs, openai_api_key=None):
-    if openai_api_key is not None:
-        openai.api_key = openai_api_key
-        openai.Model.list()
-    return generate_top_k_references(paper_title, top_k=num_refs)
 
 
 with gr.Blocks(theme=theme) as demo:
@@ -271,9 +272,6 @@ with gr.Blocks(theme=theme) as demo:
                             max_tokens_kd_slider = gr.Slider(minimum=256, maximum=8192, value=2048, step=2,
                                                       interactive=True, label="MAX_TOKENS",
                                                       info="知识库内容占用Prompts中的Token数")
-                            # template = gr.Dropdown(label="Template", choices=ALL_TEMPLATES, value="Default",
-                            #                        interactive=True,
-                            #                        info="生成论文的参考模板.")
                             domain_knowledge = gr.Dropdown(label="预载知识库",
                                                            choices=ALL_DATABASES,
                                                            value="(None)",
@@ -283,18 +281,6 @@ with gr.Blocks(theme=theme) as demo:
                 with gr.Row():
                     clear_button_pp = gr.Button("Clear")
                     submit_button_pp = gr.Button("Submit", variant="primary")
-
-            # with gr.Tab("文献搜索"):
-            #     gr.Markdown(REFERENCES)
-            #
-            #     title_refs = gr.Textbox(value="Playing Atari with Deep Reinforcement Learning", lines=1, max_lines=1,
-            #                             label="Title", info="论文标题")
-            #     slider_refs = gr.Slider(minimum=1, maximum=100, value=5, step=1,
-            #                             interactive=True, label="最相关的参考文献数目")
-            #     with gr.Row():
-            #         clear_button_refs = gr.Button("Clear")
-            #         submit_button_refs = gr.Button("Submit", variant="primary")
-
             with gr.Tab("文献综述 (Coming soon!)"):
                 gr.Markdown('''
                 <h1  style="text-align: center;">Coming soon!</h1>
@@ -308,26 +294,12 @@ with gr.Blocks(theme=theme) as demo:
             gr.Markdown(STATUS)
             file_output = gr.File(label="Output")
             json_output = gr.JSON(label="References")
-
-
-    # def wrapped_generator(
-    #         paper_title, paper_description,  # main input
-    #         openai_api_key=None, openai_url=None,  # key
-    #         tldr=True, max_kw_refs=10, bib_refs=None, max_tokens_ref=2048,  # references
-    #         knowledge_database=None, max_tokens_kd=2048, query_counts=10,  # domain knowledge
-    #         paper_template="ICLR2022", selected_sections=None, model="gpt-4", prompts_mode=False,  # outputs parameters
-    #         cache_mode=IS_CACHE_AVAILABLE  # handle cache mode
-    # ):
     clear_button_pp.click(fn=clear_inputs, inputs=[title, description_pp], outputs=[title, description_pp])
     submit_button_pp.click(fn=wrapped_generator,
                            inputs=[title, description_pp, key, url,
                                    tldr_checkbox, max_kw_ref_slider,  bibtex_file, max_tokens_ref_slider,
                                    domain_knowledge, max_tokens_kd_slider, query_counts_slider,
                                    template, sections, model_selection, prompts_mode], outputs=file_output)
-
-    # clear_button_refs.click(fn=clear_inputs_refs, inputs=[title_refs, slider_refs], outputs=[title_refs, slider_refs])
-    # submit_button_refs.click(fn=wrapped_references_generator,
-    #                          inputs=[title_refs, slider_refs, key], outputs=json_output)
 
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch(show_error=True)
