@@ -7,14 +7,27 @@ import os
 import json
 from models import EMBEDDINGS
 
-HF_TOKEN = os.getenv("HF_TOKEN")
-REPO_ID = os.getenv("KDB_REPO")
+# todo: 功能还没做
 
-snapshot_download(REPO_ID, repo_type="dataset", local_dir="knowledge_databases/",
-                  local_dir_use_symlinks=False, token=HF_TOKEN)
+HF_TOKEN = None # os.getenv("HF_TOKEN")
+REPO_ID = None # os.getenv("KDB_REPO")
+if HF_TOKEN is not None and REPO_ID is not None:
+    snapshot_download(REPO_ID, repo_type="dataset", local_dir="knowledge_databases/",
+                      local_dir_use_symlinks=False, token=HF_TOKEN)
 ALL_KDB = ["(None)"] + list_folders("knowledge_databases")
 
+ANNOUNCEMENT = """
+# Evaluate the quality of retrieved date from the FAISS database
 
+Use this space test the performance of some pre-constructed vector databases hosted at `shaocongma/kdb`. To use this space for your own FAISS database, follow this instruction:
+1. Duplicate this space.
+2. Add the secret key `HF_TOKEN` with your own Huggingface User Access Token. 
+3. Create a Huggingface Dataset. Put your FAISS database to it.
+4. Add the secret key `REPO_ID` as your dataset's address. 
+"""
+AUTODRAFT = """
+AutoDraft is a GPT-based project to generate an academic paper using the title and contributions. When generating specific sections, AutoDraft will query some necessary backgrounds in related fields from the pre-constructed vector database.  
+"""
 
 def query_from_kdb(input, kdb, query_counts):
     if kdb == "(None)":
@@ -37,25 +50,36 @@ def query_from_kdb(input, kdb, query_counts):
         raise RuntimeError(f"Failed to query from FAISS.")
     return domain_knowledge, ""
 
-ANNOUNCEMENT = """"""
-
 with gr.Blocks() as demo:
-    gr.HTML(ANNOUNCEMENT)
     with gr.Row():
         with gr.Column():
-            kdb_dropdown = gr.Dropdown(choices=ALL_KDB, value="(None)")
-            user_input = gr.Textbox(label="Input")
-            button_retrieval = gr.Button("Query", variant="primary")
+            gr.Markdown(ANNOUNCEMENT)
+
+            kdb_dropdown = gr.Dropdown(choices=ALL_KDB, value="(None)", label="Knowledge Databases",
+                                       info="Pre-defined knowledge databases utilized to aid in the generation of academic writing content. "
+                                            "Hosted at `shaocongma/kdb`.")
+            with gr.Tab("User's Input"):
+                user_input = gr.Textbox(label="Input", info="Input anything you like to test what will be retrived from the vector database.")
+                with gr.Row():
+                    button_clear = gr.Button("Clear")
+                    button_retrieval = gr.Button("Retrieve", variant="primary")
+            with gr.Tab("AutoDraft"):
+                gr.Markdown(AUTODRAFT)
+                title_input = gr.Textbox(label="Title")
+                contribution_input = gr.Textbox(label="Contributions", lines=5)
+                with gr.Row():
+                    button_clear_2 = gr.Button("Clear")
+                    button_retrieval_2 = gr.Button("Retrieve", variant="primary")
 
             with gr.Accordion("Advanced Setting", open=False):
-                query_counts_slider = gr.Slider(minimum=1, maximum=20, value=10, step=1,
-                                                       interactive=True, label="QUERY_COUNTS",
-                                                       info="从知识库内检索多少条内容")
+                query_counts_slider = gr.Slider(minimum=1, maximum=50, value=10, step=1,
+                                                interactive=True, label="QUERY_COUNTS",
+                                                info="How many contents will be retrieved from the vector database.")
 
         retrieval_output = gr.JSON(label="Output")
 
-
     button_retrieval.click(fn=query_from_kdb, inputs=[user_input, kdb_dropdown, query_counts_slider], outputs=[retrieval_output, user_input])
+
 demo.queue(concurrency_count=1, max_size=5, api_open=False)
 demo.launch(show_error=True)
 
