@@ -3,7 +3,7 @@ import openai
 import ast
 from tools import functions, TOOLS
 
-MAX_ITER = 5
+MAX_ITER = 99
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 default_model = os.getenv("DEFAULT_MODEL")

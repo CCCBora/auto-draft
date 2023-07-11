@@ -1,0 +1,29 @@
+date: 2023-07-11
+
+generator: "auto_draft"
+
+paper:
+  title: "playing atari game with deep reinforcement learning"
+  description: ""
+
+references:
+  tldr: True
+  max_kw_refs: 10
+  max_tokens_ref: 2048
+  refs: null
+
+domain_knowledge:
+  knowledge_database: null
+  max_tokens_kd: 2048
+  query_counts: 10
+
+output:
+  template: "default"
+  model: "gpt-4"
+  selected_sections: null
+  prompts_mode: False
+
+
+
+
+

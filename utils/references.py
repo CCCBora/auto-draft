@@ -3,52 +3,68 @@
 #
 # Generate references:
 #   `Reference` class:
-#       1. Read a given .bib file to collect papers; use `search_paper_abstract` method to fill missing abstract.
+#       1. Two methods to load papers:
+#           1.1. Read a given string including paper titles separated by `,`
+#           1.2. Read a .bib file
 #       2. Given some keywords; use Semantic Scholar API to find papers.
 #       3. Generate bibtex from the selected papers. --> to_bibtex()
 #       4. Generate prompts from the selected papers: --> to_prompts()
 #               A sample prompt: {"paper_id": "paper summary"}
+#       5. Generate json from the selected papers. --> to_json()
 
-# todo: (1) citations & citedby of provided papers:
-#       load the pre-defined papers; use S2 to find all related works
-#       add all citations to `bib_papers`
-#       add all citedby to `bib_papers`
-#       use Semantic Scholar to find their embeddings
-#       (2) separate references:
-#       divide references into different groups to reduce the tokens count
-#       for generating different paragraph of related works, use different set of references
-from typing import Dict, List
-import requests
+import itertools
+import json
 import re
+import uuid
+from typing import Dict, List, Optional, Union
+
+import arxiv
 import bibtexparser
-import random
-from scholarly import scholarly
-from scholarly import ProxyGenerator
-import tiktoken
-import itertools, uuid, json
-from gradio_client import Client
-import time
 import numpy as np
+import requests
+import tiktoken
 from numpy.linalg import norm
+from scholarly import ProxyGenerator
+from scholarly import scholarly
 
-
+# used to evaluate embeddings
 URL = "https://model-apis.semanticscholar.org/specter/v1/invoke"
 MAX_BATCH_SIZE = 16
 MAX_ATTEMPTS = 20
 
+# `tokenizer`: used to count how many tokens
+tokenizer_name = tiktoken.encoding_for_model('gpt-4')
+tokenizer = tiktoken.get_encoding(tokenizer_name.name)
+
+
 ######################################################################################################################
 # Some basic tools
 ######################################################################################################################
+def remove_special_characters(s):
+    return ''.join(c for c in s if c.isalnum() or c.isspace() or c == ',')
+
+
+def remove_newlines(serie):
+    # This function is applied to the abstract of each paper to reduce the length of prompts.
+    serie = serie.replace('\n', ' ')
+    serie = serie.replace('\\n', ' ')
+    serie = serie.replace('  ', ' ')
+    serie = serie.replace('  ', ' ')
+    return serie
+
+
 def evaluate_cosine_similarity(v1, v2):
     try:
-        return np.dot(v1, v2)/(norm(v1)*norm(v2))
+        return np.dot(v1, v2) / (norm(v1) * norm(v2))
     except ValueError:
         return 0.0
+
 
 def chunks(lst, chunk_size=MAX_BATCH_SIZE):
     """Splits a longer list to respect batch size"""
     for i in range(0, len(lst), chunk_size):
-        yield lst[i : i + chunk_size]
+        yield lst[i: i + chunk_size]
+
 
 def embed(papers):
     embeddings_by_paper_id: Dict[str, List[float]] = {}
@@ -64,6 +80,7 @@ def embed(papers):
 
     return embeddings_by_paper_id
 
+
 def get_embeddings(paper_title, paper_description):
     output = [{"title": paper_title, "abstract": paper_description, "paper_id": "target_paper"}]
     emb_vector = embed(output)["target_paper"]
@@ -71,9 +88,17 @@ def get_embeddings(paper_title, paper_description):
     target_paper["embeddings"] = emb_vector
     return target_paper
 
+
+def get_embeddings_vector(paper_title, paper_description):
+    output = [{"title": paper_title, "abstract": paper_description, "paper_id": "target_paper"}]
+    emb_vector = embed(output)["target_paper"]
+    return emb_vector
+
+
 def get_top_k(papers_dict, paper_title, paper_description, k=None):
+    # returns the top k papers most similar to the target paper
     target_paper = get_embeddings(paper_title, paper_description)
-    papers = papers_dict # must include embeddings
+    papers = papers_dict  # must include embeddings
 
     # if k < len(papers_json), return k most relevant papers
     # if k >= len(papers_json) or k is None, return all papers
@@ -88,7 +113,7 @@ def get_top_k(papers_dict, paper_title, paper_description, k=None):
     for k in papers:
         v = papers[k]
         embedding_vector = v["embeddings"]
-        cos_sim  = evaluate_cosine_similarity(embedding_vector, target_embedding_vector)
+        cos_sim = evaluate_cosine_similarity(embedding_vector, target_embedding_vector)
         papers[k]["cos_sim"] = cos_sim
 
     # return the best k papers
@@ -96,14 +121,6 @@ def get_top_k(papers_dict, paper_title, paper_description, k=None):
     for key in sorted_papers:
         sorted_papers[key].pop("embeddings", None)
     return sorted_papers
-
-def remove_newlines(serie):
-    # This function is applied to the abstract of each paper to reduce the length of prompts.
-    serie = serie.replace('\n', ' ')
-    serie = serie.replace('\\n', ' ')
-    serie = serie.replace('  ', ' ')
-    serie = serie.replace('  ', ' ')
-    return serie
 
 
 def search_paper_abstract(title):
@@ -121,6 +138,159 @@ def search_paper_abstract(title):
         return ""
         # raise RuntimeError("ScraperAPI fails.")
     return remove_newlines(found_paper['bib']['abstract'])
+
+
+def tiktoken_len(text):
+    # evaluate how many tokens for the given text
+    tokens = tokenizer.encode(text, disallowed_special=())
+    return len(tokens)
+
+
+######################################################################################################################
+# Academic search tools
+######################################################################################################################
+def externalIds2link(externalIds):
+    # Sample externalIds:
+    #   "{'MAG': '2932819148', 'DBLP': 'conf/icml/HaarnojaZAL18', 'ArXiv': '1801.01290', 'CorpusId': 28202810}"
+    if externalIds:
+        # Supports ArXiv, MAG, ACL, PubMed, Medline, PubMedCentral, DBLP, DOI
+        # priority: DBLP > arXiv > (todo: MAG > CorpusId > DOI > ACL > PubMed > Mdeline > PubMedCentral)
+        # DBLP
+        dblp_id = externalIds.get('DBLP')
+        if dblp_id is not None:
+            dblp_link = f"dblp.org/rec/{dblp_id}"
+            return dblp_link
+        # arXiv
+        arxiv_id = externalIds.get('ArXiv')
+        if arxiv_id is not None:
+            arxiv_link = f"arxiv.org/abs/{arxiv_id}"
+            return arxiv_link
+        return ""
+    else:
+        # if this is an empty dictionary, return an empty string
+        return ""
+
+
+def search_paper_arxiv(title):
+    search = arxiv.Search(
+        query=title,
+        max_results=1,
+        sort_by=arxiv.SortCriterion.Relevance
+    )
+    try:
+        #       (1) paper_id (2) title (3) authors (4) year (5) link (6) abstract (7) journal (8) embeddings
+        result = next(search.results())
+        title = result.title
+        authors = " and ".join([author.name for author in result.authors])
+        year = str(result.updated.now().year)
+        link = result.pdf_url
+        abstract = result.summary
+        journal = f"Arxiv: {result.entry_id}"
+        paper_id = result.authors[0].name.replace(" ", "")[:4] + year + title[:6].replace(" ", "")
+        paper_id = paper_id.lower()
+
+        paper = {"paper_id": paper_id,
+                 "title": title,
+                 "authors": authors,
+                 "year": year,
+                 "link": link,
+                 "abstract": abstract,
+                 "journal": journal}
+    except StopIteration:
+        paper = {}
+    return paper
+
+
+def search_paper_ss(title):
+    fields = ["title", "abstract", "venue", "year", "authors", "tldr", "externalIds"]
+    limit = 1
+    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={title}&limit={limit}&fields={",".join(fields)}'
+    # headers = {"Accept": "*/*", "x-api-key": constants.S2_KEY}
+    headers = {"Accept": "*/*"}
+    response = requests.get(url, headers=headers, timeout=30)
+    results = response.json()
+    if results['total'] == 0:
+        return {}
+    raw_paper = results['data'][0]
+    if raw_paper['tldr'] is not None:
+        abstract = raw_paper['tldr']['text']
+    elif raw_paper['abstract'] is not None:
+        abstract = remove_newlines(raw_paper['abstract'])
+    else:
+        abstract = ""
+
+    authors = [author['name'] for author in raw_paper['authors']]
+    authors_str = " and ".join(authors)
+    year_str = str(raw_paper['year'])
+    title = raw_paper['title']
+
+    paper_id = authors_str.replace(" ", "")[:4] + year_str + title[:6].replace(" ", "")
+
+    # some journal may contain &; replace it. e.g. journal={IEEE Power & Energy Society General Meeting}
+    journal = remove_special_characters(raw_paper['venue'])
+    if not journal:
+        journal = "arXiv preprint"
+    link = externalIds2link(raw_paper['externalIds'])
+    paper = {
+        "paper_id": paper_id,
+        "title": title,
+        "abstract": abstract,
+        "link": link,
+        "authors": authors_str,
+        "year": year_str,
+        "journal": journal
+    }
+    return paper
+
+
+def search_paper_scrape(title):
+    pg = ProxyGenerator()
+    success = pg.ScraperAPI("921b16f94d701308b9d9b4456ddde155")
+    if success:
+        try:
+            scholarly.use_proxy(pg)
+            # input the title of a paper, return its abstract
+            search_query = scholarly.search_pubs(title)
+            found_paper = next(search_query)
+            url = found_paper['pub_url']
+
+            result = found_paper['bib']
+
+            title = result['title']
+            authors = " and ".join(result['author'])
+            year = str(result['pub_year'])
+            journal = result['pub_year']
+            abstract = result['abstract']
+
+            paper_id = authors.replace(" ", "")[:4] + year + title[:6].replace(" ", "")
+            paper = {
+                "paper_id": paper_id,
+                "title": title,
+                "abstract": abstract,
+                "link": url,
+                "authors": authors,
+                "year": year,
+                "journal": journal
+            }
+            return paper
+        except StopIteration:
+            return {}
+
+
+def search_paper(title, verbose=True):
+    if verbose:
+        print(f"Searching {title}...")
+    # try Semantic Scholar first
+    paper = search_paper_ss(title)
+    if not paper:
+        paper = search_paper_arxiv(title)
+    if not paper:
+        paper = search_paper_scrape(title)
+    if paper:
+        paper["embeddings"] = get_embeddings_vector(paper_title=paper['title'], paper_description=paper['abstract'])
+    if verbose:
+        print(f"Search result: {paper}.")
+    return paper
 
 
 def load_papers_from_bibtex(bib_file_path):
@@ -154,15 +324,20 @@ def load_papers_from_bibtex(bib_file_path):
             bib_papers.append(result)
         return bib_papers
 
-# `tokenizer`: used to count how many tokens
-tokenizer_name = tiktoken.encoding_for_model('gpt-4')
-tokenizer = tiktoken.get_encoding(tokenizer_name.name)
 
-
-def tiktoken_len(text):
-    # evaluate how many tokens for the given text
-    tokens = tokenizer.encode(text, disallowed_special=())
-    return len(tokens)
+def load_papers_from_text(text):
+    # split text by comma
+    titles = [part.strip() for part in text.split(',')]
+    titles = [remove_special_characters(title) for title in titles]
+    papers = []
+    if len(titles) > 0:
+        for title in titles:
+            paper = search_paper(title)
+            if paper:
+                papers.append(paper)
+        return papers
+    else:
+        return []
 
 
 ######################################################################################################################
@@ -174,7 +349,7 @@ def ss_search(keywords, limit=20, fields=None):
         fields = ["title", "abstract", "venue", "year", "authors", "tldr", "embedding", "externalIds"]
     keywords = keywords.lower()
     keywords = keywords.replace(" ", "+")
-    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={keywords}&limit={limit}&fields={",".join(fields)}'
+    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={keywords}&limit={limit}&fields={",".join(fields)} '
     # headers = {"Accept": "*/*", "x-api-key": constants.S2_KEY}
     headers = {"Accept": "*/*"}
 
@@ -183,27 +358,6 @@ def ss_search(keywords, limit=20, fields=None):
 
 
 def _collect_papers_ss(keyword, counts=3, tldr=False):
-    def externalIds2link(externalIds):
-        # Sample externalIds:
-        #   "{'MAG': '2932819148', 'DBLP': 'conf/icml/HaarnojaZAL18', 'ArXiv': '1801.01290', 'CorpusId': 28202810}"
-        if externalIds:
-            # Supports ArXiv, MAG, ACL, PubMed, Medline, PubMedCentral, DBLP, DOI
-            # priority: DBLP > arXiv > (todo: MAG > CorpusId > DOI > ACL > PubMed > Mdeline > PubMedCentral)
-            # DBLP
-            dblp_id = externalIds.get('DBLP')
-            if dblp_id is not None:
-                dblp_link = f"dblp.org/rec/{dblp_id}"
-                return dblp_link
-            # arXiv
-            arxiv_id = externalIds.get('ArXiv')
-            if arxiv_id is not None:
-                arxiv_link = f"arxiv.org/abs/{arxiv_id}"
-                return arxiv_link
-            return ""
-        else:
-            # if this is an empty dictionary, return an empty string
-            return ""
-
     def extract_paper_id(last_name, year_str, title):
         pattern = r'^\w+'
         words = re.findall(pattern, title)
@@ -289,24 +443,28 @@ def _collect_papers_ss(keyword, counts=3, tldr=False):
 ######################################################################################################################
 
 class References:
-    def __init__(self, title, load_papers=None, keyword="customized_refs", description=""):
+    def __init__(self,
+                 title: str,
+                 load_papers: Optional[str] = None,
+                 load_bibtex: Optional[str] = None,
+                 description: str = ""
+                 ):
+        self.papers = {}
+        if load_bibtex is not None:
+            self.papers["load_from_bibtex"] = load_papers_from_bibtex(load_bibtex)
         if load_papers is not None:
-            self.papers = {keyword: load_papers_from_bibtex(load_papers)}
-        else:
-            self.papers = {}
+            self.papers["load_from_text"] = load_papers_from_text(load_papers)
+
         self.title = title
         self.description = description
 
-    def load_papers(self, bibtex, keyword):
-        self.papers[keyword] = load_papers_from_bibtex(bibtex)
-
-    def generate_keywords_dict(self):
+    def generate_keywords_dict(self) -> Dict[str, int]:
         keywords_dict = {}
         for k in self.papers:
             keywords_dict[k] = len(self.papers[k])
         return keywords_dict
 
-    def collect_papers(self, keywords_dict, tldr=False):
+    def collect_papers(self, keywords_dict: Dict[str, int], tldr: bool = False) -> None:
         """
         Collect as many papers as possible
 
@@ -320,21 +478,15 @@ class References:
             keywords.append(" ".join(comb_keyword))
         for key in keywords:
             self.papers[key] = _collect_papers_ss(key, 10, tldr)
-        # print("Collected papers: ", papers)
-        # for key, counts in keywords_dict.items():
-        #     self.papers[key] = _collect_papers_ss(key, counts, tldr)
 
-    def to_bibtex(self, path_to_bibtex="ref.bib"):
+    def to_bibtex(self, path_to_bibtex: str = "ref.bib") -> List[str]:
         """
         Turn the saved paper list into bibtex file "ref.bib". Return a list of all `paper_id`.
         """
-        # todo:
-        #   use embeddings to evaluate; keep top k relevant references in papers
-        #   send (title, .bib file) to evaluate embeddings; recieve truncated papers
         papers = self._get_papers(keyword="_all")
 
-        l = len(papers)
-        print(f"{l} papers will be added to `ref.bib`.")
+        num_papers = len(papers)
+        print(f"{num_papers} papers will be added to `ref.bib`.")
         # clear the bibtex file
         with open(path_to_bibtex, "w", encoding="utf-8") as file:
             file.write("")
@@ -372,7 +524,7 @@ class References:
             papers = self.papers["keyword"]
         return papers
 
-    def to_prompts(self, keyword="_all", max_tokens=2048):
+    def to_prompts(self, keyword: str = "_all", max_tokens: int = 2048):
         # `prompts`:
         #   {"paper1_bibtex_id": "paper_1_abstract", "paper2_bibtex_id": "paper2_abstract"}
         #   this will be used to instruct GPT model to cite the correct bibtex entry.
@@ -384,21 +536,11 @@ class References:
         papers_json = self.to_json()
         with open(json_path, "w") as f:
             json.dump(papers_json, f)
-
         try:
             # Use external API to obtain the most relevant papers
             title = self.title
             description = self.description
             result = get_top_k(papers_json, title, description)
-            # client = Client("https://shaocongma-evaluate-specter-embeddings.hf.space/")
-            # result = client.predict(
-            #     title,  # str  in 'Title' Textbox component
-            #     json_path,  # str (filepath or URL to file) in 'Papers JSON (as string)' File component
-            #     50,  # int | float (numeric value between 1 and 50) in 'Top-k Relevant Papers' Slider component
-            #     api_name="/get_k_relevant_papers"
-            # )
-            # with open(result) as f:
-            #     result = json.load(f)
             result = [item for key, item in result.items()]
         except Exception as e:
             print(f"Error occurs during calling external API: {e}\n")
@@ -417,54 +559,9 @@ class References:
                 break
         return prompts
 
-    def to_json(self, keyword="_all"):
+    def to_json(self, keyword: str = "_all"):
         papers = self._get_papers(keyword)
         papers_json = {}
         for paper in papers:
             papers_json[paper["paper_id"]] = paper
         return papers_json
-
-
-if __name__ == "__main__":
-    # testing search results
-    print("================Testing `ss_search`================")
-    r = ss_search("Deep Q-Networks", limit=1)  # a list of raw papers
-    if r['total'] > 0:
-        paper = r['data'][0]
-        # print(paper)
-
-    # resting References
-    print("================Testing `References`================")
-    refs = References(title="Super Deep Q-Networks")
-    keywords_dict = {
-        "Deep Q-Networks": 5,
-        "Actor-Critic Algorithms": 4,
-        "Exploration-Exploitation Trade-off": 3
-    }
-    print("================Testing `References.collect_papers`================")
-    refs.collect_papers(keywords_dict, tldr=True)
-    for k in refs.papers:
-        papers = refs.papers[k]  # for each keyword, there is a list of papers
-        print("keyword: ", k)
-        for paper in papers:
-            print(paper["paper_id"])
-
-    print("================Testing `References.to_bibtex`================")
-    refs.to_bibtex()
-
-    print("================Testing `References.to_json`================")
-    papers_json = refs.to_json()  # this json can be used to find the most relevant papers
-    with open("papers.json", "w", encoding='utf-8') as text_file:
-        text_file.write(f"{papers_json}")
-
-    print("================Testing `References.to_prompts`================")
-    prompts = refs.to_prompts()
-    print(prompts)
-
-    # bib = "test.bib"
-    # refs.load_papers(bib, "variance-reduction rl")
-    # print(refs.papers)
-    #
-    # prompts = refs.to_prompts()
-    # for k in prompts:
-    #     print(f"{k}: {prompts[k]}\n")

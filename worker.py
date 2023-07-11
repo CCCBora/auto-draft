@@ -3,7 +3,7 @@ This script is only used for service-side host.
 '''
 import boto3
 import os, time
-from api_wrapper import generator_wrapper
+from wrapper import generator_wrapper
 from sqlalchemy import create_engine, Table, MetaData, update, select
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import inspect

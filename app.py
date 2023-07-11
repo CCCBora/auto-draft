@@ -2,9 +2,10 @@ import uuid
 import gradio as gr
 import os
 import openai
-from auto_backgrounds import generate_backgrounds, generate_draft
+import yaml
 from utils.file_operations import list_folders, urlify
 from huggingface_hub import snapshot_download
+from wrapper import generator_wrapper
 
 # todo:
 #   6. get logs when the procedure is not completed. *
@@ -22,8 +23,10 @@ from huggingface_hub import snapshot_download
 # OPENAI_API_BASE: (Optional) Support alternative OpenAI minors
 # GPT4_ENABLE: (Optional) Set it to 1 to enable GPT-4 model.
 
-# AWS_ACCESS_KEY_ID: (Optional) Access AWS cloud storage (you need to edit `BUCKET_NAME` in `utils/storage.py` if you need to use this function)
-# AWS_SECRET_ACCESS_KEY: (Optional) Access AWS cloud storage (you need to edit `BUCKET_NAME` in `utils/storage.py` if you need to use this function)
+# AWS_ACCESS_KEY_ID: (Optional)
+#   Access AWS cloud storage (you need to edit `BUCKET_NAME` in `utils/storage.py` if you need to use this function)
+# AWS_SECRET_ACCESS_KEY: (Optional)
+#   Access AWS cloud storage (you need to edit `BUCKET_NAME` in `utils/storage.py` if you need to use this function)
 # KDB_REPO: (Optional) A Huggingface dataset hosting Knowledge Databases
 # HF_TOKEN: (Optional) Access to KDB_REPO
 
@@ -34,7 +37,7 @@ openai_key = os.getenv("OPENAI_API_KEY")
 openai_api_base = os.getenv("OPENAI_API_BASE")
 if openai_api_base is not None:
     openai.api_base = openai_api_base
-GPT4_ENABLE = os.getenv("GPT4_ENABLE") # disable GPT-4 for public repo
+GPT4_ENABLE = os.getenv("GPT4_ENABLE")  # disable GPT-4 for public repo
 
 access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
@@ -124,7 +127,7 @@ REFERENCES = """## 一键搜索相关论文
 REFERENCES_INSTRUCTION = """### References
 这一栏用于定义AI如何选取参考文献. 目前是两种方式混合:
 1. GPT自动根据标题生成关键字，使用Semantic Scholar搜索引擎搜索文献，利用Specter获取Paper Embedding来自动选取最相关的文献作为GPT的参考资料.
-2. 用户上传bibtex文件，使用Google Scholar搜索摘要作为GPT的参考资料. 
+2. 用户通过输入文章标题(用英文逗号隔开), AI会自动搜索文献作为参考资料.
 关于有希望利用本地文件来供GPT参考的功能将在未来实装.
 """
 
@@ -140,7 +143,7 @@ OUTPUTS_INSTRUCTION = """### Outputs
 这一栏用于定义输出的内容：
 * Template: 用于填装内容的LaTeX模板.
 * Models: 使用GPT-4或者GPT-3.5-Turbo生成内容.
-* Prompts模式: 不生成内容, 而是生成用于生成内容的Prompts. 可以手动复制到网页版或者其他语言模型中进行使用.
+* Prompts模式: 不生成内容, 而是生成用于生成内容的Prompts. 可以手动复制到网页版或者其他语言模型中进行使用. (放在输出的ZIP文件的prompts.json文件中)
 """
 
 OTHERS_INSTRUCTION = """### Others
@@ -164,18 +167,34 @@ def clear_inputs(*args):
 def clear_inputs_refs(*args):
     return "", 5
 
+
 def wrapped_generator(
         paper_title, paper_description,  # main input
-        openai_api_key=None, openai_url=None,  # key
-        tldr=True, max_kw_refs=10, bib_refs=None, max_tokens_ref=2048,  # references
+        openai_api_key=None,  # key
+        tldr=True, max_kw_refs=10, refs=None, max_tokens_ref=2048,  # references
         knowledge_database=None, max_tokens_kd=2048, query_counts=10,  # domain knowledge
         paper_template="ICLR2022", selected_sections=None, model="gpt-4", prompts_mode=False,  # outputs parameters
         cache_mode=IS_CACHE_AVAILABLE  # handle cache mode
 ):
-    # if `cache_mode` is True, then always upload the generated content to my S3.
     file_name_upload = urlify(paper_title) + "_" + uuid.uuid1().hex + ".zip"
-    if bib_refs is not None:
-        bib_refs = bib_refs.name
+
+    # load the default configuration file
+    with open("configurations/default.yaml", 'r') as file:
+        config = yaml.safe_load(file)
+    config["paper"]["title"] = paper_title
+    config["paper"]["description"] = paper_description
+    config["references"]["tldr"] = tldr
+    config["references"]["max_kw_refs"] = max_kw_refs
+    config["references"]["refs"] = refs
+    config["references"]["max_tokens_ref"] = max_tokens_ref
+    config["domain_knowledge"]["knowledge_database"] = knowledge_database
+    config["domain_knowledge"]["max_tokens_kd"] = max_tokens_kd
+    config["domain_knowledge"]["query_counts"] = query_counts
+    config["output"]["selected_sections"] = selected_sections
+    config["output"]["model"] = model
+    config["output"]["template"] = paper_template
+    config["output"]["prompts_mode"] = prompts_mode
+
     if openai_api_key is not None:
         openai.api_key = openai_api_key
         try:
@@ -183,12 +202,7 @@ def wrapped_generator(
         except Exception as e:
             raise gr.Error(f"Key错误. Error: {e}")
     try:
-        output = generate_draft(
-            paper_title, description=paper_description, # main input
-           tldr=tldr, max_kw_refs=max_kw_refs, bib_refs=bib_refs, max_tokens_ref=max_tokens_ref,  # references
-           knowledge_database=knowledge_database, max_tokens_kd=max_tokens_kd, query_counts=query_counts, # domain knowledge
-           sections=selected_sections, model=model, template=paper_template, prompts_mode=prompts_mode, # outputs parameters
-           )
+        output = generator_wrapper(config)
         if cache_mode:
             from utils.storage import upload_file
             upload_file(output, target_name=file_name_upload)
@@ -204,8 +218,6 @@ with gr.Blocks(theme=theme) as demo:
         with gr.Column(scale=2):
             key = gr.Textbox(value=openai_key, lines=1, max_lines=1, label="OpenAI Key",
                              visible=not IS_OPENAI_API_KEY_AVAILABLE)
-            url = gr.Textbox(value=None, lines=1, max_lines=1, label="URL",
-                             visible=False)
             # 每个功能做一个tab
             with gr.Tab("学术论文"):
                 gr.Markdown(ACADEMIC_PAPER)
@@ -230,8 +242,8 @@ with gr.Blocks(theme=theme) as demo:
                                                               interactive=GPT4_INTERACTIVE,
                                                               info="生成论文用到的语言模型.")
                                 prompts_mode = gr.Checkbox(value=False, visible=True, interactive=True,
-                                                             label="Prompts模式",
-                                                             info="只输出用于生成论文的Prompts, 可以复制到别的地方生成论文.")
+                                                           label="Prompts模式",
+                                                           info="只输出用于生成论文的Prompts, 可以复制到别的地方生成论文.")
 
                             sections = gr.CheckboxGroup(
                                 choices=["introduction", "related works", "backgrounds", "methodology", "experiments",
@@ -245,21 +257,27 @@ with gr.Blocks(theme=theme) as demo:
 
                         with gr.Column(scale=2):
                             max_kw_ref_slider = gr.Slider(minimum=1, maximum=20, value=10, step=1,
-                                                       interactive=True, label="MAX_KW_REFS",
-                                                       info="每个Keyword搜索几篇参考文献", visible=False)
+                                                          interactive=True, label="MAX_KW_REFS",
+                                                          info="每个Keyword搜索几篇参考文献", visible=False)
 
                             max_tokens_ref_slider = gr.Slider(minimum=256, maximum=8192, value=2048, step=2,
-                                                       interactive=True, label="MAX_TOKENS",
-                                                       info="参考文献内容占用Prompts中的Token数")
+                                                              interactive=True, label="MAX_TOKENS",
+                                                              info="参考文献内容占用Prompts中的Token数")
 
                             tldr_checkbox = gr.Checkbox(value=True, label="TLDR;",
                                                         info="选择此筐表示将使用Semantic Scholar的TLDR作为文献的总结.",
                                                         interactive=True)
-                            gr.Markdown('''
-                            上传.bib文件提供AI需要参考的文献. 
-                            ''')
-                            bibtex_file = gr.File(label="Upload .bib file", file_types=["text"],
-                                                  interactive=True)
+
+                            text_ref = gr.Textbox(lines=5, label="References (Optional)", visible=True,
+                                                  info="交给AI参考的文献的标题, 用英文逗号`,`隔开.")
+
+                            gr.Examples(
+                                examples = ["Understanding the Impact of Model Incoherence on Convergence of Incremental SGD with Random Reshuffle,"
+                                            "Variance-Reduced Off-Policy TDC Learning: Non-Asymptotic Convergence Analysis,"
+                                            "Greedy-GQ with Variance Reduction: Finite-time Analysis and Improved Complexity"],
+                                inputs=text_ref,
+                                cache_examples=False
+                            )
 
                     with gr.Row():
                         with gr.Column(scale=1):
@@ -267,11 +285,11 @@ with gr.Blocks(theme=theme) as demo:
 
                         with gr.Column(scale=2):
                             query_counts_slider = gr.Slider(minimum=1, maximum=20, value=10, step=1,
-                                                       interactive=True, label="QUERY_COUNTS",
-                                                       info="从知识库内检索多少条内容", visible=False)
+                                                            interactive=True, label="QUERY_COUNTS",
+                                                            info="从知识库内检索多少条内容", visible=False)
                             max_tokens_kd_slider = gr.Slider(minimum=256, maximum=8192, value=2048, step=2,
-                                                      interactive=True, label="MAX_TOKENS",
-                                                      info="知识库内容占用Prompts中的Token数")
+                                                             interactive=True, label="MAX_TOKENS",
+                                                             info="知识库内容占用Prompts中的Token数")
                             domain_knowledge = gr.Dropdown(label="预载知识库",
                                                            choices=ALL_DATABASES,
                                                            value="(None)",
@@ -296,8 +314,8 @@ with gr.Blocks(theme=theme) as demo:
             json_output = gr.JSON(label="References")
     clear_button_pp.click(fn=clear_inputs, inputs=[title, description_pp], outputs=[title, description_pp])
     submit_button_pp.click(fn=wrapped_generator,
-                           inputs=[title, description_pp, key, url,
-                                   tldr_checkbox, max_kw_ref_slider,  bibtex_file, max_tokens_ref_slider,
+                           inputs=[title, description_pp, key,
+                                   tldr_checkbox, max_kw_ref_slider, text_ref, max_tokens_ref_slider,
                                    domain_knowledge, max_tokens_kd_slider, query_counts_slider,
                                    template, sections, model_selection, prompts_mode], outputs=file_output)
 

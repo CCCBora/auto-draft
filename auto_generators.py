@@ -40,7 +40,7 @@ def log_usage(usage, generating_target, print_out=True):
 
 
 def _generation_setup(title, description="", template="ICLR2022",
-                      tldr=False, max_kw_refs=10, bib_refs=None, max_tokens_ref=2048,  # generating references
+                      tldr=False, max_kw_refs=10, refs=None, max_tokens_ref=2048,  # generating references
                       knowledge_database=None, max_tokens_kd=2048, query_counts=10,  # querying from knowledge database
                       debug=True):
     """
@@ -115,7 +115,7 @@ def _generation_setup(title, description="", template="ICLR2022",
 
     print("Keywords: \n", keywords)
     # todo: in some rare situations, collected papers will be an empty list. handle this issue
-    ref = References(title, bib_refs)
+    ref = References(title, load_papers=refs)
     ref.collect_papers(keywords, tldr=tldr)
     references = ref.to_prompts(max_tokens=max_tokens_ref)
     all_paper_ids = ref.to_bibtex(bibtex_path)
@@ -200,7 +200,7 @@ def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-
 
 
 def generate_draft(title, description="", # main input
-                   tldr=True, max_kw_refs=10, bib_refs=None, max_tokens_ref=2048,  # references
+                   tldr=True, max_kw_refs=10, refs=None, max_tokens_ref=2048,  # references
                    knowledge_database=None, max_tokens_kd=2048, query_counts=10, # domain knowledge
                    sections=None, model="gpt-4", template="ICLR2022", prompts_mode=False, # outputs parameters
                    ):
@@ -245,7 +245,7 @@ def generate_draft(title, description="", # main input
                     "abstract"]
     else:
         sections = _filter_sections(sections)
-    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, bib_refs,
+    paper, destination_folder, _ = _generation_setup(title, description, template, tldr, max_kw_refs, refs,
                                                      max_tokens_ref=max_tokens_ref, max_tokens_kd=max_tokens_kd,
                                                      query_counts=query_counts,
                                                      knowledge_database=knowledge_database)
@@ -254,11 +254,10 @@ def generate_draft(title, description="", # main input
     prompts_dict = {}
     print(f"================PROCESSING================")
     for section in sections:
+        prompts = generate_paper_prompts(paper, section)
+        prompts_dict[section] = prompts
         if prompts_mode:
-            prompts = generate_paper_prompts(paper, section)
-            prompts_dict[section] = prompts
             continue
-
         print(f"Generate {section} part...")
         max_attempts = 4
         attempts_count = 0
@@ -274,21 +273,16 @@ def generate_draft(title, description="", # main input
                 logging.info(message)
                 attempts_count += 1
                 time.sleep(15)
-
     # post-processing
     print("================POST-PROCESSING================")
     create_copies(destination_folder)
-    input_dict = {"title": title, "description": description, "generator": "generate_draft"}
-    filename = hash_name(input_dict) + ".zip"
+    filename = "prompts.json"
+    with open(os.path.join(destination_folder, filename), "w") as f:
+        json.dump(prompts_dict, f)
     print("\nMission completed.\n")
+    return destination_folder
 
-    if prompts_mode:
-        filename = hash_name(input_dict) + ".json"
-        with open(filename, "w") as f:
-            json.dump(prompts_dict, f)
-        return filename
-    else:
-        return make_archive(destination_folder, filename)
+       #  return make_archive(destination_folder, filename)
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ class Knowledge:
         self.db = db
         self.contents = []
 
-    def collect_knowledge(self, keywords_dict, max_query):
+    def collect_knowledge(self, keywords_dict: dict, max_query: int):
         """
         keywords_dict:
             {"machine learning": 5, "language model": 2};
