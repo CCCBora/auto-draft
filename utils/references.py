@@ -15,6 +15,7 @@
 import itertools
 import json
 import re
+import time
 import uuid
 from typing import Dict, List, Optional, Union
 
@@ -202,13 +203,24 @@ def search_paper_arxiv(title):
 
 
 def search_paper_ss(title):
+    if not title:
+        return {}
+
     fields = ["title", "abstract", "venue", "year", "authors", "tldr", "externalIds"]
     limit = 1
-    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={title}&limit={limit}&fields={",".join(fields)}'
-    # headers = {"Accept": "*/*", "x-api-key": constants.S2_KEY}
+    query = title.lower()
+    query = query.replace(" ", "+")
+    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={query}&limit={limit}&fields={",".join(fields)}'
+    time.sleep(5)
     headers = {"Accept": "*/*"}
     response = requests.get(url, headers=headers, timeout=30)
     results = response.json()
+    try:
+        total = results['total']
+        if total == 0:
+            return {}
+    except KeyError:
+        return {}
     raw_paper = results['data'][0]
     if raw_paper['tldr'] is not None:
         abstract = raw_paper['tldr']['text']
@@ -324,6 +336,8 @@ def load_papers_from_bibtex(bib_file_path):
 
 
 def load_papers_from_text(text):
+    print(text)
+
     # split text by comma
     titles = [part.strip() for part in text.split(',')]
     titles = [remove_special_characters(title) for title in titles]
@@ -347,7 +361,7 @@ def ss_search(keywords, limit=20, fields=None):
         fields = ["title", "abstract", "venue", "year", "authors", "tldr", "embedding", "externalIds"]
     keywords = keywords.lower()
     keywords = keywords.replace(" ", "+")
-    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={keywords}&limit={limit}&fields={",".join(fields)} '
+    url = f'https://api.semanticscholar.org/graph/v1/paper/search?query={keywords}&limit={limit}&fields={",".join(fields)}'
     # headers = {"Accept": "*/*", "x-api-key": constants.S2_KEY}
     headers = {"Accept": "*/*"}
 
@@ -563,3 +577,7 @@ class References:
         for paper in papers:
             papers_json[paper["paper_id"]] = paper
         return papers_json
+
+if __name__ == "__main__":
+    ref = References("Play Atari", load_papers="Atari Game Using Reinforcement Lear4ning")
+    ref.collect_papers({"Reinforcemetn Learning": 10}, tldr=True)
