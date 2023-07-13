@@ -110,6 +110,7 @@ def modify_status(task_id, new_status):
     # Close the session
     session.close()
 
+
 #######################################################################################################################
 # Pipline
 #######################################################################################################################
@@ -154,7 +155,7 @@ def pipeline(message_count=0, query_interval=10):
         print("Local file path (ZIP): ", zip_path)
         print("Upload to S3: ", upload_to)
         upload_file(zip_path, upload_to)
-        modify_status(task_id, 2) # status: 0 - pending (default), 1 - running, 2 - completed, 3 - failed, 4 - deleted
+        modify_status(task_id, 2)  # status: 0 - pending (default), 1 - running, 2 - completed, 3 - failed, 4 - deleted
         print(f"Success in generating the paper.")
 
         # Complete.

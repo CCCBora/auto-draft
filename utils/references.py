@@ -209,8 +209,6 @@ def search_paper_ss(title):
     headers = {"Accept": "*/*"}
     response = requests.get(url, headers=headers, timeout=30)
     results = response.json()
-    if results['total'] == 0:
-        return {}
     raw_paper = results['data'][0]
     if raw_paper['tldr'] is not None:
         abstract = raw_paper['tldr']['text']
