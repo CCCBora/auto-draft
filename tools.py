@@ -2,7 +2,7 @@ import os
 import openai
 from utils.references import References
 from utils.gpt_interaction import GPTModel
-from utils.prompts import SYSTEM
+from prompts import SYSTEM
 from langchain.tools import BaseTool
 from pydantic import BaseModel, Field
 from typing import Optional, Type

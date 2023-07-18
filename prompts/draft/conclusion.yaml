@@ -1,0 +1,14 @@
+_type: prompt
+input_variables:
+  ["title", "description", "body"]
+
+template: |
+  Your task is to write the conclusion of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  - Read the existing parts of paper and write the conclusion section.
+  ---
+  The existing parts of this paper is provided here. Ensure that your notations and statements are consistent with this paper.
+  `{body}`
+  ---
+  Your response should start with \section{{Conclusion}}. Ensure that it can be directly compiled by LaTeX.
+

@@ -1,0 +1,15 @@
+_type: prompt
+input_variables:
+  ["title", "description", "references"]
+
+template: |
+  Your task is to write the introduction of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+    - Include five paragraph: Establishing the motivation for the research. Explaining its importance and relevance to the AI community. Clearly state the problem you're addressing, your proposed solution, and the specific research questions or objectives. Briefly mention key related works for context and explain the main differences from this work. List three novel contributions of this paper.
+  ---
+  Some references are provided below. Every time you use information from references, you need to appropriately cite it (using \citep or \citet).For example of \citep, the sentence where you use information from lei2022adaptive \citep{{lei2022adaptive}}. For example of \citet, \citet{{lei2022adaptive}} claims some information.
+  Please avoid citing the same reference in a same paragraph.
+  References:
+  `{references}`
+  ---
+  Your response should start with \section{{Introduction}}. Ensure that it can be directly compiled by LaTeX.

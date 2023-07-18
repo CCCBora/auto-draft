@@ -579,5 +579,5 @@ class References:
         return papers_json
 
 if __name__ == "__main__":
-    ref = References("Play Atari", load_papers="Atari Game Using Reinforcement Lear4ning")
+    ref = References("Play Atari", load_papers="")
     ref.collect_papers({"Reinforcemetn Learning": 10}, tldr=True)

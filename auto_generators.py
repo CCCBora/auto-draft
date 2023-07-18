@@ -1,16 +1,14 @@
 import json
 import os.path
-from utils.references import References
-from utils.knowledge import Knowledge
-from utils.file_operations import hash_name, make_archive, copy_templates
-from utils.tex_processing import create_copies
-from section_generator import section_generation  # figures_generation, section_generation_bg, keywords_generation,
-from utils.prompts import generate_paper_prompts
 import logging
 import time
+from utils import References, Knowledge
+from utils.file_operations import copy_templates
+from utils.tex_processing import create_copies
+from prompts.draft import generate_paper_prompts
+from prompts import SYSTEM, SECTION_GENERATION_SYSTEM
 from langchain.vectorstores import FAISS
 from utils.gpt_interaction import GPTModel
-from utils.prompts import SYSTEM
 from models import EMBEDDINGS
 
 TOTAL_TOKENS = 0
@@ -44,30 +42,37 @@ def _generation_setup(title, description="", template="ICLR2022",
                       knowledge_database=None, max_tokens_kd=2048, query_counts=10,  # querying from knowledge database
                       debug=True):
     """
-    This function handles the setup process for paper generation; it contains three folds
-        1. Copy the template to the outputs folder. Create the log file `generation.log`
-        2. Collect references based on the given `title` and `description`
-        3. Generate the basic `paper` object (a dictionary)
+    This function handles the setup process for paper generation. It mainly does the following:
+        1. Copies the provided template to the outputs folder and creates the log file `generation.log`.
+        2. Generates a set of contributions based on the given `title` (if `description` is not given).
+        3. Collects references using the generated keywords.
+        4. Generates domain knowledge (or related concepts).
+        5. Generates necessary media based on the title and contributions.
+        6. Returns a paper object containing the collected information,
+            the destination folder path, and a list of all collected paper IDs.
 
     Parameters:
         title (str): The title of the paper.
-        description (str, optional): A short description or abstract for the paper. Defaults to an empty string.
+        description (str, optional): Contributions for the paper. Defaults to an empty string.
         template (str, optional): The template to be used for paper generation. Defaults to "ICLR2022".
         tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be used
                                for the collected papers. Defaults to False.
         max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword.
                                      Defaults to 10.
-        bib_refs (path to a bibtex file, optional).
+        refs (None, optional): If provided, load the existing papers from this reference. Defaults to None.
+        max_tokens_ref (int, optional): The maximum number of tokens for the references. Defaults to 2048.
+        knowledge_database (None, str, optional): The name of the knowledge database to be queried. Defaults to None.
+        max_tokens_kd (int, optional): The maximum number of tokens for the domain knowledge. Defaults to 2048.
+        query_counts (int, optional): The number of queries to perform against the knowledge database. Defaults to 10.
+        debug (bool, optional): A flag that if set to True, will raise exceptions,
+            otherwise, it will print the error message and continue. Defaults to True.
 
     Returns:
-    tuple: A tuple containing the following elements:
-        - paper (dict): A dictionary containing the generated paper information.
-        - destination_folder (str): The path to the destination folder where the generation log is saved.
-        - all_paper_ids (list): A list of all paper IDs collected for the references.
+        tuple: A tuple containing the following elements:
+            - paper (dict): A dictionary containing the generated paper information.
+            - destination_folder (str): The path to the destination folder where the generation log is saved.
+            - all_paper_ids (list): A list of all paper IDs collected for the references.
     """
-    # print("Generation setup...")
-    # paper = {}
-    # paper_body = {}
     llm = GPTModel(model="gpt-3.5-turbo")
 
     # Create a copy in the outputs folder.
@@ -97,9 +102,6 @@ def _generation_setup(title, description="", template="ICLR2022",
     ###################################################################################################################
     # Generate references
     ###################################################################################################################
-    # input_dict = {"title": title, "description": description}
-    # keywords, usage = keywords_generation(input_dict)
-    # log_usage(usage, "keywords")
     try:
         keywords, usage = llm(systems=SYSTEM["keywords"], prompts=title, return_json=True)
         log_usage(usage, "keywords")
@@ -110,8 +112,6 @@ def _generation_setup(title, description="", template="ICLR2022",
         else:
             print("Failed to generate keywords. Use default keywords.")
             keywords = {"machine learning": max_kw_refs, "artificial intelligence": max_kw_refs}  # DEFAULT KEYWORDS
-    # generate keywords dictionary
-    # keywords = {keyword: max_kw_refs for keyword in keywords}
 
     print("Keywords: \n", keywords)
     # todo: in some rare situations, collected papers will be an empty list. handle this issue
@@ -180,57 +180,50 @@ def _generation_setup(title, description="", template="ICLR2022",
     # todo: use `all_paper_ids` to check if all citations are in this list
 
 
-def generate_backgrounds(title, description="", template="ICLR2022", model="gpt-4"):
-    # todo: to match the current generation setup
-    paper, destination_folder, _ = _generation_setup(title, description, template, model)
-
-    for section in ["introduction", "related works", "backgrounds"]:
-        try:
-            usage = section_generation_bg(paper, section, destination_folder, model=model)
-            log_usage(usage, section)
-        except Exception as e:
-            message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}"
-            print(message)
-            logging.info(message)
-    print(f"The paper '{title}' has been generated. Saved to {destination_folder}.")
-
-    input_dict = {"title": title, "description": description, "generator": "generate_backgrounds"}
-    filename = hash_name(input_dict) + ".zip"
-    return make_archive(destination_folder, filename)
-
-
-def generate_draft(title, description="", # main input
+def generate_draft(title, description="",  # main input
                    tldr=True, max_kw_refs=10, refs=None, max_tokens_ref=2048,  # references
-                   knowledge_database=None, max_tokens_kd=2048, query_counts=10, # domain knowledge
-                   sections=None, model="gpt-4", template="ICLR2022", prompts_mode=False, # outputs parameters
+                   knowledge_database=None, max_tokens_kd=2048, query_counts=10,  # domain knowledge
+                   sections=None, model="gpt-4", template="ICLR2022", prompts_mode=False,  # outputs parameters
                    ):
     """
-    This function generates a draft paper using the provided information; it contains three steps: 1. Pre-processing:
-    Initializes the setup for paper generation and filters the sections to be included in the paper. 2. Processing:
-    Generates each section of the paper. 3. Post-processing: Creates backup copies of the paper and returns the paper
-    in a zipped format.
+    This function generates a draft paper using the provided information. The process is divided into three steps:
+
+    1. Pre-processing: Initializes the setup for paper generation and arranges the sections in the desired order.
+    2. Processing: Generates each section of the paper using the specified language model and writes the generated
+       contents into a .tex file.
+    3. Post-processing: Saves the prompts used for each section into a .json file and returns the path to the
+       destination folder containing all the generated files.
 
     Parameters:
         title (str): The title of the paper.
-        description (str, optional): A short description or abstract for the paper. Defaults to an empty string.
-        template (str, optional): The template to be used for paper generation. Defaults to "ICLR2022".
-        tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be used
-                               for the collected papers. Defaults to True.
+        description (str, optional): Contributions for the paper. Defaults to an empty string.
+        tldr (bool, optional): A flag indicating whether a TL;DR (Too Long; Didn't Read) summary should be used.
+                               Defaults to True.
         max_kw_refs (int, optional): The maximum number of references that can be associated with each keyword.
                                      Defaults to 10.
+        refs (optional): A list of references to be used in the paper.
+        max_tokens_ref (int, optional): The maximum number of tokens that can be used for each reference. Defaults to
+                                        2048.
+        knowledge_database (optional): A database containing domain-specific knowledge to be used in the paper.
+        max_tokens_kd (int, optional): The maximum number of tokens that can be used from the domain-specific
+                                       knowledge database. Defaults to 2048.
+        query_counts (int, optional): The number of queries to be made to the domain-specific knowledge database.
+                                      Defaults to 10.
         sections (list, optional): The sections to be included in the paper. If not provided, all the standard
-                                   sections are included.
-        bib_refs (path to a bibtex file, optional).
+                                   sections are included. Defaults to None.
         model (str, optional): The language model to be used for paper generation. Defaults to "gpt-4".
+        template (str, optional): The template to be used for paper generation. Defaults to "ICLR2022".
+        prompts_mode (bool, optional): A flag indicating whether to generate only the prompts for each section
+                                       without generating the section contents. Defaults to False.
 
     Returns:
-    str: The path to the zipped file containing the generated paper and associated files.
+    str: The path to the destination folder containing the generated files.
 
-    Note: The function also handles errors that occur during section generation and retries a maximum of 4 times
-    before proceeding.
+    Note: OpenAI API Error will be handled by `GPTModel`.
     """
 
     def _filter_sections(sections):
+        # desired order for generating contents
         ordered_sections = ["introduction", "related works", "backgrounds", "methodology", "experiments", "conclusion",
                             "abstract"]
         return [section for section in ordered_sections if section in sections]
@@ -259,20 +252,18 @@ def generate_draft(title, description="", # main input
         if prompts_mode:
             continue
         print(f"Generate {section} part...")
-        max_attempts = 4
-        attempts_count = 0
-        while attempts_count < max_attempts:
-            try:
-                usage = section_generation(paper, section, destination_folder, model=model)
-                print(f"{section} part has been generated. ")
-                log_usage(usage, section)
-                break
-            except Exception as e:
-                message = f"Failed to generate {section}. {type(e).__name__} was raised:  {e}\n"
-                print(message)
-                logging.info(message)
-                attempts_count += 1
-                time.sleep(15)
+        prompts = generate_paper_prompts(paper, section)
+        chatgpt = GPTModel(model=model)
+        output, usage = chatgpt(systems=SECTION_GENERATION_SYSTEM.format(research_field="machine learning"),
+                                prompts=prompts)
+        paper["body"][section] = output
+        tex_file = os.path.join(destination_folder, f"{section}.tex")
+        with open(tex_file, "w", encoding="utf-8") as f:
+            f.write(output)
+        time.sleep(5)
+        print(f"{section} part has been generated. ")
+        log_usage(usage, section)
+
     # post-processing
     print("================POST-PROCESSING================")
     create_copies(destination_folder)
@@ -282,15 +273,14 @@ def generate_draft(title, description="", # main input
     print("\nMission completed.\n")
     return destination_folder
 
-       #  return make_archive(destination_folder, filename)
-
 
 if __name__ == "__main__":
     import openai
 
     openai.api_key = os.getenv("OPENAI_API_KEY")
-    openai.api_base = os.getenv("OPENAI_API_BASE")
+    # openai.api_base = os.getenv("OPENAI_API_BASE")
 
     target_title = "Playing Atari with Decentralized Reinforcement Learning"
-    output = generate_draft(target_title, knowledge_database="ml_textbook_test")
+    # output = generate_draft(target_title, model="gpt-3.5-turbo-16k")
+    output = generate_draft(target_title, model="gpt-4")
     print(output)

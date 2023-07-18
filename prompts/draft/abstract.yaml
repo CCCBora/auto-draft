@@ -1,0 +1,13 @@
+_type: prompt
+input_variables:
+  ["title", "description", "body"]
+
+template: |
+  Your task is to write the abstract of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  - Read the existing parts of paper and write the abstract.
+  ---
+  The existing parts of this paper is provided here. Ensure that your notations and statements are consistent with this paper.
+  `{body}`
+  ---
+  Your response should start with \begin{{abstract}} and should end with \end{{abstract}}. Ensure that it can be directly compiled by LaTeX.

@@ -1,0 +1,16 @@
+_type: prompt
+input_variables:
+  ["title", "description", "body"]
+
+template: |
+  Your task is to write the experiments section of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  - Provide a high-level overview at the beginning of this section.
+   - If necessary, include a table to compare with other methods and bold our method.
+  - Assume you have some figures ('exp1.png', 'exp2.png', ...); they can be any figures you need (e.g. loss curves, comparison with other methods, visualization, or others you need). Insert figures you need with informative caption.
+  - If necessary, use different subsections to distinguish different experimental setup.
+  ---
+  The existing parts of this paper is provided here. Ensure that your notations and statements are consistent with this paper.
+  `{body}`
+  ---
+  Your response should start with \section{{Experiments}}. Ensure that it can be directly compiled by LaTeX.

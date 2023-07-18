@@ -1,0 +1,20 @@
+_type: prompt
+input_variables:
+  ["title", "description", "references", "domain_knowledge"]
+
+template: |
+  Your task is to write the backgrounds section of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  - Start from one high-level paragraph to state the central problem in this field with detailed examples in industrial applications and theoretical challenges.
+  - Followed by two to three subsections:  Explain the foundational concepts and notations that underpin your research using as many as mathematical formulas (written in LaTeX). Introduce more necessary mathematical notations, equations, or algorithms that are connected to this work. Present detailed discussions on how these concepts are applied in this paper.
+  ---
+  Some references are provided below. Every time you use information from references, you need to appropriately cite it (using \citep or \citet).For example of \citep, the sentence where you use information from lei2022adaptive \citep{{lei2022adaptive}}. For example of \citet, \citet{{lei2022adaptive}} claims some information.
+  Please avoid citing the same reference in a same paragraph.
+  References:
+  `{references}`
+  ---
+  Related concepts are provided below. These concepts could be helpful when you need to introduce these concepts.
+  Related Concetps:
+  `{domain_knowledge}`
+  ---
+  Your response should start with \section{{Backgrounds}}. Ensure that it can be directly compiled by LaTeX.

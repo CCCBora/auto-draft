@@ -1,0 +1,15 @@
+_type: prompt
+input_variables:
+  ["title", "description", "references"]
+
+template: |
+  Your task is to write the related works of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  - Discuss three to five main related fields to this paper. For each field, select five to ten key publications from references. For each reference, analyze its strengths and weaknesses in one or two sentences. Present the related works in a logical manner, often chronologically. Consider using a taxonomy or categorization to structure the discussion. Do not use \section{{...}} or \subsection{{...}}; use \paragraph{{...}} to list related fields.
+  ---
+  Some references are provided below. Every time you use information from references, you need to appropriately cite it (using \citep or \citet).For example of \citep, the sentence where you use information from lei2022adaptive \citep{{lei2022adaptive}}. For example of \citet, \citet{{lei2022adaptive}} claims some information.
+  Please avoid citing the same reference in a same paragraph.
+  References:
+  `{references}`
+  ---
+  Your response should start with \section{{Related Works}}. Ensure that it can be directly compiled by LaTeX.

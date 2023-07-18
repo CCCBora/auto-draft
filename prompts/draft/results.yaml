@@ -1,0 +1,14 @@
+_type: prompt
+input_variables:
+  ["title", "description", "domain_knowledge"]
+
+template: |
+  Your task is to write the main results of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  Write the theoretical results section using LaTeX. Include theorem and corollary to support this paper (with formulas). Explain what assumptions are used and why they are standard and necessary. Do not include \section{...}.
+  ---
+  Related concepts are provided below. These concepts could be helpful when you need to introduce these concepts.
+  Related Concetps:
+  `{domain_knowledge}`
+  ---
+  Your response should start with \section{{Main Results}}. Ensure that it can be directly compiled by LaTeX.

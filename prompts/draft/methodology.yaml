@@ -1,0 +1,18 @@
+_type: prompt
+input_variables:
+  ["title", "description", "domain_knowledge"]
+
+template: |
+  Your task is to write the methodology of the paper '{title}'. This paper has the following contributions: {description}
+  Your response should follow the following instructions:
+  - Provide a high-level overview of the proposed method at the beginning of this section.
+   - Assume you have some figures ('fig1.png', 'fig2.png', ...); they can be any figures you need (e.g. flow chart, model architecture, sample output, simulation result, or others you need). Insert figures you need with informative caption.
+  - Use one subsection to give a detailed formulation of the proposed method and explain how it overcomes the weakness of existing methods mentioned in this paper.  If necessary, write pseudo codes wrapped by \begin{{algorithm}} ... \end{{algorithm}} to explain the detailed steps instead of simply listing them.
+  - Use one follow-up subsection to highlight the key concepts in the proposed method.   Elaborate the novelty of these key concepts using formulas and inserting appropriate figures.
+  - Ensure the name of each subsection to be specific.
+  ---
+  Related concepts are provided below. These concepts could be helpful when you need to introduce these concepts.
+  Related Concetps:
+  `{domain_knowledge}`
+  ---
+  Your response should start with \section{{Methodology}}. Ensure that it can be directly compiled by LaTeX.
