@@ -7,10 +7,6 @@ from utils.file_operations import list_folders, urlify
 from huggingface_hub import snapshot_download
 from wrapper import generator_wrapper
 
-# todo:
-#   6. get logs when the procedure is not completed. *
-#   7. 自己的文件库； 更多的prompts
-#   2. 实现别的功能
 # future:
 #   generation.log sometimes disappears (ignore this)
 #   1. Check if there are any duplicated citations

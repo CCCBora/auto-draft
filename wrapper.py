@@ -44,7 +44,7 @@ def generator_wrapper(config):
                                 )
     else:
         raise NotImplementedError(f"The generator {generator} has not been supported yet.")
-    # todo: post processing: translate to Chinese, compile PDF ...
+    # todo: post processing: algorithms (in methodology), translate to Chinese, compile PDF ...
     filename = remove_special_characters(title).replace(" ", "_") + uuid.uuid1().hex + ".zip"
     return make_archive(folder, filename)
 
